@@ -1,7 +1,7 @@
 'use strict';
 // Троицк сквозь время: карта → пролёт к точке → вид улицы со слайдером лет.
 
-const OVERVIEW = { center: [61.5615, 54.0870], zoom: 13.3, pitch: 35, bearing: -12 };
+let OVERVIEW = { center: [61.556, 54.093], zoom: 13.2, pitch: 25, bearing: 0 };
 const BOUNDS = [[61.45, 53.98], [61.70, 54.15]];
 
 const protocol = new pmtiles.Protocol();
@@ -62,6 +62,11 @@ Promise.all([
   fetch('data/eras.json').then(r => r.ok ? r.json() : {}).catch(() => ({})),
 ]).then(([p, e]) => {
   places = p; eras = e;
+  // стартовый вид: все точки на экране любого телефона
+  const b = new maplibregl.LngLatBounds();
+  places.forEach(pl => b.extend(pl.pos));
+  const fit = map.cameraForBounds(b, { padding: { top: 120, bottom: 130, left: 90, right: 90 } });
+  if (fit) { OVERVIEW = { center: fit.center, zoom: Math.min(fit.zoom, 15), pitch: 0, bearing: 0 }; map.jumpTo(OVERVIEW); }
   map.on('load', addPins);
   if (map.loaded()) addPins();
 });
@@ -95,47 +100,65 @@ function flyToPlace(pl) {
   });
 }
 
+const origOf = e => e.photo && e.photo.file ? 'img/orig/' + e.photo.file.replace(/\.[a-z]+$/i, '') + '.webp' : null;
+
 function openStreet(pl) {
   const list = (eras[pl.id] || []).slice().sort((a, b) => a.year - b.year);
   const frames = $('frames'); frames.innerHTML = '';
   $('place-title').textContent = pl.title;
+  $('place-intro').textContent = pl.intro || '';
   const slider = $('slider'), ticks = $('ticks');
   ticks.innerHTML = '';
-  if (!list.length) {
-    list.push({ year: 'скоро', text: 'Материалы по этому месту готовятся: тексты только по проверенным источникам.' });
-  }
-  list.forEach((e, i) => {
-    let node;
-    if (e.img) {
-      node = new Image(); node.src = e.img; node.alt = `${pl.title}, ${e.year}`; node.decoding = 'async';
-    } else {
-      node = document.createElement('div'); node.className = 'placeholder';
-      node.textContent = 'Изображение этого года готовится';
-    }
+  if (!list.length) list.push({ year: 'скоро', text: 'Материалы по этому месту готовятся.' });
+  list.forEach(e => {
+    const node = new Image();
+    node.alt = `${pl.title}, ${e.label || e.year}`; node.decoding = 'async';
+    node.onerror = () => {
+      const ph = document.createElement('div'); ph.className = 'placeholder'; ph.textContent = 'Изображение этого года готовится';
+      if (node.classList.contains('on')) ph.classList.add('on');
+      node.replaceWith(ph);
+    };
+    node.src = e.img || `img/${pl.id}/${e.year}.webp`;
     frames.appendChild(node);
-    const t = document.createElement('span'); t.textContent = e.year; ticks.appendChild(t);
+    const t = document.createElement('span'); t.textContent = e.label === 'Сегодня' ? 'сейчас' : (e.label || e.year); ticks.appendChild(t);
   });
   slider.max = list.length - 1; slider.value = list.length - 1;
   slider.disabled = list.length < 2;
   slider.oninput = () => showEra(list, +slider.value);
   showEra(list, list.length - 1);
+  $('panel').scrollTop = 0;
   const s = $('street'); s.hidden = false;
   requestAnimationFrame(() => s.classList.add('show'));
 }
 
+let shown = null;
 function showEra(list, i) {
-  const e = list[i];
+  const e = list[i]; shown = e;
   [...$('frames').children].forEach((n, k) => n.classList.toggle('on', k === i));
   [...$('ticks').children].forEach((n, k) => n.classList.toggle('on', k === i));
   $('year-big').textContent = e.label || e.year;
   $('era-text').textContent = e.text || '';
-  const src = $('era-src'); src.innerHTML = '';
-  if (e.note) src.append(e.note + ' ');
+  const today = e.label === 'Сегодня';
+  $('recon').textContent = e.photo ? (today ? 'Кадр собран по современному фото' :
+    `Реконструкция по архивному фото (${e.label || e.year}). Камера та же, меняется только время.`) : '';
+  $('orig-btn').hidden = !origOf(e);
+  const src = $('era-src'); src.innerHTML = 'Источники: ';
   (e.sources || []).forEach((s, k) => {
     const a = document.createElement('a'); a.href = s.url; a.target = '_blank'; a.rel = 'noopener';
-    a.textContent = s.name; if (k || e.note) src.append(' · '); src.append(a);
+    a.textContent = s.name; if (k) src.append(' · '); src.append(a);
   });
+  if (!(e.sources || []).length) src.textContent = '';
 }
+
+$('orig-btn').addEventListener('click', () => {
+  if (!shown) return;
+  $('orig-img').src = origOf(shown);
+  const c = $('orig-credit'); c.innerHTML = '';
+  const a = document.createElement('a'); a.href = shown.photo.url; a.target = '_blank'; a.rel = 'noopener';
+  a.textContent = shown.photo.credit || shown.photo.url; c.append('Подлинник: ', a);
+  $('orig').hidden = false;
+});
+$('orig').addEventListener('click', ev => { if (ev.target.tagName !== 'A') $('orig').hidden = true; });
 
 $('back').addEventListener('click', () => {
   const s = $('street'); s.classList.remove('show');
@@ -154,4 +177,8 @@ if (location.search.includes('debug')) {
   window.addEventListener('unhandledrejection', e => log('REJ ' + (e.reason && e.reason.message || e.reason)));
   map.on('error', e => log('MAP ' + (e.error && e.error.message || JSON.stringify(e).slice(0, 200))));
   map.on('idle', () => log('idle z=' + map.getZoom().toFixed(1) + ' bld=' + map.queryRenderedFeatures({ layers: ['buildings'] }).length));
+}
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
 }

@@ -20,16 +20,24 @@
   <div id="frames"></div>
   <button id="back" aria-label="Назад к карте">‹ Карта</button>
   <div id="panel">
-    <div id="place-title"></div>
-    <div id="year-big"></div>
-    <div id="era-text"></div>
-    <div id="era-src"></div>
     <div id="slider-wrap">
       <input id="slider" type="range" min="0" max="0" step="1" value="0" aria-label="Год">
       <div id="ticks"></div>
     </div>
+    <div id="year-row"><div id="year-big"></div><button id="orig-btn" hidden>Подлинное фото</button></div>
+    <div id="place-title"></div>
+    <div id="era-text"></div>
+    <div id="recon"></div>
+    <div id="place-intro"></div>
+    <div id="era-src"></div>
   </div>
 </section>
+
+<div id="orig" hidden>
+  <img id="orig-img" alt="Подлинное архивное фото">
+  <div id="orig-credit"></div>
+  <div class="orig-hint">Нажми, чтобы закрыть</div>
+</div>
 
 <script src="lib/maplibre-gl.js"></script>
 <script src="lib/pmtiles.js"></script>
