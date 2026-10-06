@@ -78,7 +78,15 @@ function addPins() {
     const el = document.createElement('div');
     el.className = 'pin';
     el.innerHTML = `<div class="pin-label">${pl.title}</div>`;
-    el.addEventListener('click', ev => { ev.stopPropagation(); flyToPlace(pl); });
+    // на телефоне карта глушит click у маркеров — ловим касание сами (без сдвига пальца = нажатие)
+    let start = null;
+    el.addEventListener('pointerdown', ev => { start = [ev.clientX, ev.clientY]; ev.stopPropagation(); });
+    el.addEventListener('pointerup', ev => {
+      ev.stopPropagation();
+      if (start && Math.hypot(ev.clientX - start[0], ev.clientY - start[1]) < 12) flyToPlace(pl);
+      start = null;
+    });
+    el.addEventListener('touchstart', ev => ev.stopPropagation(), { passive: true });
     new maplibregl.Marker({ element: el }).setLngLat(pl.pos).addTo(map);
   }
 }
