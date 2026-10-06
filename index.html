@@ -16,20 +16,22 @@
   <p>Нажми на светящуюся точку</p>
 </header>
 
+<nav id="chips" aria-label="Места"></nav>
+
 <section id="street" hidden>
   <div id="frames"></div>
   <button id="back" aria-label="Назад к карте">‹ Карта</button>
   <div id="panel">
-    <div id="slider-wrap">
-      <input id="slider" type="range" min="0" max="0" step="1" value="0" aria-label="Год">
-      <div id="ticks"></div>
-    </div>
     <div id="year-row"><div id="year-big"></div><button id="orig-btn" hidden>Подлинное фото</button></div>
     <div id="place-title"></div>
     <div id="era-text"></div>
     <div id="recon"></div>
     <div id="place-intro"></div>
     <div id="era-src"></div>
+  </div>
+  <div id="dock">
+    <input id="slider" type="range" min="0" max="0" step="1" value="0" aria-label="Год">
+    <div id="ticks"></div>
   </div>
 </section>
 

@@ -29,23 +29,30 @@ const map = new maplibregl.Map({
       sat: { type: 'raster', tiles: [base + 'sat/{z}/{x}/{y}.jpg'], tileSize: 256, minzoom: 8, maxzoom: 15,
         bounds: [61.45, 53.98, 61.70, 54.15],
         attribution: 'Спутник: <a href="https://s2maps.eu">Sentinel-2 cloudless 2023 by EOX</a> (Copernicus)' },
+      // детальный спутник (онлайн); если не грузится или нет сети — виден Sentinel под ним
+      esri: { type: 'raster', tileSize: 256, maxzoom: 19, minzoom: 10,
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        attribution: 'Спутник: Esri, Maxar, Earthstar Geographics' },
       pm: { type: 'vector', url: 'pmtiles://' + base + 'troitsk.pmtiles',
         attribution: '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a>, <a href="https://protomaps.com">Protomaps</a>' },
     },
     sky: { 'sky-color': '#9cc0e6', 'horizon-color': '#efe2cf', 'fog-color': '#d9cbb6',
       'sky-horizon-blend': 0.6, 'horizon-fog-blend': 0.7, 'fog-ground-blend': 0.6, 'atmosphere-blend': 0.8 },
+    light: { anchor: 'map', position: [1.3, 210, 35], intensity: 0.45, color: '#fff4e0' },
     layers: [
       { id: 'bg', type: 'background', paint: { 'background-color': '#3b3a2c' } },
       { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-saturation': -0.15, 'raster-contrast': 0.08 } },
+      { id: 'esri', type: 'raster', source: 'esri', minzoom: 10, paint: { 'raster-fade-duration': 250, 'raster-contrast': 0.05 } },
       { id: 'roads', type: 'line', source: 'pm', 'source-layer': 'roads', minzoom: 13,
         filter: ['in', ['get', 'kind'], ['literal', ['major_road', 'medium_road', 'minor_road', 'highway']]],
         paint: { 'line-color': '#f3e9dc', 'line-opacity': 0.35,
           'line-width': ['interpolate', ['exponential', 1.6], ['zoom'], 13, 0.5, 18, 8] } },
       { id: 'buildings', type: 'fill-extrusion', source: 'pm', 'source-layer': 'buildings', minzoom: 14,
         paint: {
-          'fill-extrusion-color': '#e6d3b3',
+          'fill-extrusion-color': '#ddd2c0',
+          'fill-extrusion-vertical-gradient': true,
           'fill-extrusion-height': ['coalesce', ['get', 'height'], 7],
-          'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 14, 0, 15.5, 0.85],
+          'fill-extrusion-opacity': 0,
         } },
       ...labelLayers,
     ],
@@ -71,12 +78,35 @@ Promise.all([
   if (map.loaded()) addPins();
 });
 
+// 3D-дома проявляются только при наклоне камеры: сверху — чистый спутник
+function updateBuildings() {
+  if (!map.getLayer('buildings')) return;
+  const p = map.getPitch(), z = map.getZoom();
+  const k = Math.min(1, Math.max(0, (p - 30) / 25)) * Math.min(1, Math.max(0, (z - 15) / 1.2));
+  map.setPaintProperty('buildings', 'fill-extrusion-opacity', +(0.8 * k).toFixed(2));
+}
+map.on('pitch', updateBuildings); map.on('zoom', updateBuildings); map.on('load', updateBuildings);
+
+// подписи точек не налезают: перекрытые прячутся (раньше в списке — важнее)
+function declutter() {
+  const shown = [...document.querySelectorAll('.pin')].map(p => p.getBoundingClientRect());
+  document.querySelectorAll('.pin-label').forEach(l => {
+    l.style.visibility = 'visible';
+    const r = l.getBoundingClientRect();
+    const own = l.parentElement.getBoundingClientRect();
+    const hit = shown.some(o => o.left !== own.left && !(r.right < o.left - 4 || r.left > o.right + 4 || r.bottom < o.top - 2 || r.top > o.bottom + 2));
+    if (hit) l.style.visibility = 'hidden'; else shown.push(r);
+  });
+}
+map.on('moveend', declutter); map.on('zoomend', declutter);
+
 let pinsAdded = false;
 function addPins() {
   if (pinsAdded) return; pinsAdded = true;
   for (const pl of places) {
     const el = document.createElement('div');
-    el.className = 'pin';
+    el.className = 'pin' + (seenSet().has(pl.id) ? ' seen' : '');
+    el.dataset.id = pl.id;
     el.innerHTML = `<div class="pin-label">${pl.title}</div>`;
     // на телефоне карта глушит click у маркеров — ловим касание сами (без сдвига пальца = нажатие)
     let start = null;
@@ -88,6 +118,14 @@ function addPins() {
     });
     el.addEventListener('touchstart', ev => ev.stopPropagation(), { passive: true });
     new maplibregl.Marker({ element: el }).setLngLat(pl.pos).addTo(map);
+  }
+  requestAnimationFrame(declutter);
+  const chips = $('chips'); chips.innerHTML = '';
+  for (const pl of places) {
+    const b = document.createElement('button'); b.textContent = pl.title; b.dataset.id = pl.id;
+    if (seenSet().has(pl.id)) b.classList.add('seen');
+    b.addEventListener('click', () => flyToPlace(pl));
+    chips.appendChild(b);
   }
 }
 
@@ -110,7 +148,15 @@ function flyToPlace(pl) {
 
 const origOf = e => e.photo && e.photo.file ? 'img/orig/' + e.photo.file.replace(/\.[a-z]+$/i, '') + '.webp' : null;
 
+function seenSet() { try { return new Set(JSON.parse(localStorage.getItem('troitsk-seen') || '[]')); } catch (e) { return new Set(); } }
+function markSeen(id) {
+  const s = seenSet(); s.add(id);
+  try { localStorage.setItem('troitsk-seen', JSON.stringify([...s])); } catch (e) {}
+  document.querySelectorAll(`[data-id="${id}"]`).forEach(el => el.classList.add('seen'));
+}
+
 function openStreet(pl) {
+  markSeen(pl.id);
   const list = (eras[pl.id] || []).slice().sort((a, b) => a.year - b.year);
   const frames = $('frames'); frames.innerHTML = '';
   $('place-title').textContent = pl.title;
@@ -134,10 +180,16 @@ function openStreet(pl) {
   slider.disabled = list.length < 2;
   slider.oninput = () => showEra(list, +slider.value);
   showEra(list, list.length - 1);
-  $('panel').scrollTop = 0;
+  $('panel').scrollTop = 0; $('frames').style.height = '';
   const s = $('street'); s.hidden = false;
   requestAnimationFrame(() => s.classList.add('show'));
 }
+
+// при чтении картинка сжимается до ~трети экрана, чтобы текст не прятался
+$('panel').addEventListener('scroll', () => {
+  const fr = $('frames'), full = Math.min(innerWidth * 4 / 3, innerHeight * 0.58), min = innerHeight * 0.3;
+  fr.style.height = Math.max(min, full - $('panel').scrollTop) + 'px';
+}, { passive: true });
 
 let shown = null;
 function showEra(list, i) {
