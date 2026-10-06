@@ -15,6 +15,12 @@
   <h1>Троицк <span>сквозь время</span></h1>
   <p>Нажми на светящуюся точку</p>
 </header>
+<button id="game-btn">🎮 Игра</button>
+
+<section id="game" hidden>
+  <button id="game-close" aria-label="Закрыть игру">✕</button>
+  <div id="game-box"></div>
+</section>
 
 <nav id="chips" aria-label="Места"></nav>
 
@@ -45,5 +51,8 @@
 <script src="lib/pmtiles.js"></script>
 <script src="lib/basemaps.js"></script>
 <script src="app.js"></script>
+<script src="lib/mqtt.min.js" defer></script>
+<script src="lib/qrcode.js" defer></script>
+<script src="game.js" defer></script>
 </body>
 </html>
