@@ -148,7 +148,7 @@ function showEra(list, i) {
   $('era-text').textContent = e.text || '';
   const today = e.label === 'Сегодня';
   $('recon').textContent = e.photo ? (today ? 'Кадр собран по современному фото' :
-    `Реконструкция по архивному фото (${e.label || e.year}). Камера та же, меняется только время.`) : '';
+    `Реконструкция по архивному фото (${e.label || e.year}). Камера та же, меняется только время.` + (e.note ? ' ' + e.note : '')) : '';
   $('orig-btn').hidden = !origOf(e);
   const src = $('era-src'); src.innerHTML = 'Источники: ';
   (e.sources || []).forEach((s, k) => {
