@@ -3,6 +3,8 @@
 
 // вступительный пролёт из космоса (один раз за сеанс; ?debug — без него)
 const INTRO = !location.search.includes('debug') && !sessionStorage.getItem('troitsk-intro');
+// мир ограничен Троицком и окрестностями
+const WORLD = [[61.40, 53.98], [61.72, 54.17]];
 let OVERVIEW = { center: [61.556, 54.093], zoom: 13.2, pitch: 25, bearing: 0 };
 const BOUNDS = [[61.45, 53.98], [61.70, 54.15]];
 
@@ -18,13 +20,14 @@ const labelLayers = basemaps.layers('pm', basemaps.namedFlavor('dark'), { lang: 
 const map = new maplibregl.Map({
   container: 'map',
   maxPitch: 85,
-  minZoom: 1,
-  ...(INTRO ? { center: [61.56, 54.09], zoom: 1.6, pitch: 0, bearing: 0 } : OVERVIEW),
+  minZoom: 10.5,
+  maxBounds: WORLD,
+  renderWorldCopies: false,
+  ...(INTRO ? { center: [61.56, 54.09], zoom: 10.5, pitch: 0, bearing: -35 } : OVERVIEW),
   attributionControl: { compact: true },
   hash: location.search.includes('debug'),
   style: {
     version: 8,
-    projection: { type: 'globe' },
     glyphs: base + 'fonts/{fontstack}/{range}.pbf',
     sprite: base + 'sprites/light',
     sources: {
@@ -32,10 +35,10 @@ const map = new maplibregl.Map({
         bounds: [61.45, 53.98, 61.70, 54.15],
         attribution: 'Спутник: <a href="https://s2maps.eu">Sentinel-2 cloudless 2023 by EOX</a> (Copernicus)' },
       // детальный спутник (онлайн); если не грузится или нет сети — виден Sentinel под ним
-      esri: { type: 'raster', tileSize: 256, maxzoom: 19, minzoom: 0,
+      esri: { type: 'raster', tileSize: 256, maxzoom: 19, minzoom: 10, bounds: [61.40, 53.98, 61.72, 54.17],
         tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
         attribution: 'Спутник: Esri, Maxar, Earthstar Geographics' },
-      pm: { type: 'vector', url: 'pmtiles://' + base + 'troitsk.pmtiles',
+      pm: { type: 'vector', url: 'pmtiles://' + base + 'troitsk.pmtiles', minzoom: 10,
         attribution: '<a href="https://openstreetmap.org/copyright">© OpenStreetMap</a>, <a href="https://protomaps.com">Protomaps</a>' },
     },
     sky: { 'sky-color': '#9cc0e6', 'horizon-color': '#efe2cf', 'fog-color': '#d9cbb6',
@@ -44,7 +47,7 @@ const map = new maplibregl.Map({
     layers: [
       { id: 'bg', type: 'background', paint: { 'background-color': '#1c2430' } },
       { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-saturation': -0.15, 'raster-contrast': 0.08 } },
-      { id: 'esri', type: 'raster', source: 'esri', paint: { 'raster-fade-duration': 250, 'raster-contrast': 0.05 } },
+      { id: 'esri', type: 'raster', source: 'esri', minzoom: 10, paint: { 'raster-fade-duration': 250, 'raster-contrast': 0.05 } },
       { id: 'roads', type: 'line', source: 'pm', 'source-layer': 'roads', minzoom: 13,
         filter: ['in', ['get', 'kind'], ['literal', ['major_road', 'medium_road', 'minor_road', 'highway']]],
         paint: { 'line-color': '#f3e9dc', 'line-opacity': 0.35,
@@ -81,17 +84,17 @@ Promise.all([
   updatePassport();
 });
 
-function lockToTown() { map.setMinZoom(10); map.setMaxBounds([[61.35, 53.93], [61.80, 54.20]]); document.body.classList.remove('intro'); declutter(); }
+function lockToTown() { document.body.classList.remove('intro'); declutter(); }
 function startIntro() {
   if (!INTRO) { map.jumpTo(OVERVIEW); lockToTown(); return; }
   try { sessionStorage.setItem('troitsk-intro', '1'); } catch (e) {}
   document.body.classList.add('intro');
   let done = false; const finish = () => { if (!done) { done = true; lockToTown(); } };
   setTimeout(() => {
-    map.flyTo({ ...OVERVIEW, duration: 6500, curve: 1.6, essential: true });
+    map.flyTo({ ...OVERVIEW, duration: 4200, curve: 1.2, essential: true });
     map.once('moveend', finish);
-  }, 1600);
-  setTimeout(finish, 10000);                          // если пролёт прервали касанием
+  }, 700);
+  setTimeout(finish, 6500);                          // если пролёт прервали касанием
 }
 
 // 3D-дома проявляются только при наклоне камеры: сверху — чистый спутник
