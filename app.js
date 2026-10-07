@@ -311,14 +311,13 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
 
 $('game-btn').addEventListener('click', () => window.openGame && window.openGame());
 
-// ---- паспорт знатока: пройденные места и грамота ----
+// ---- паспорт знатока: пройденные места ----
 function updatePassport() {
   if (!places.length) return;
   const n = places.filter(p => seenSet().has(p.id)).length;
   $('pass-btn').textContent = `🏅 ${n} из ${places.length}`;
   $('pass-btn').classList.toggle('full', n === places.length);
 }
-function savedName() { try { return JSON.parse(localStorage.getItem('tq-name')) || ''; } catch (e) { return ''; } }
 $('pass-btn').addEventListener('click', () => {
   const seen = seenSet(), list = $('pass-list'); list.innerHTML = '';
   places.forEach(p => {
@@ -328,40 +327,10 @@ $('pass-btn').addEventListener('click', () => {
   });
   const left = places.filter(p => !seen.has(p.id)).length;
   $('pass-done').hidden = left > 0; $('pass-todo').hidden = left === 0;
-  $('pass-todo').textContent = `Осталось мест: ${left}. Пройди все — получишь грамоту!`;
-  $('pass-name').value = savedName();
-  $('pass-cert').hidden = true; $('pass').hidden = false;
+  $('pass-todo').textContent = `Осталось мест: ${left}.`;
+  $('pass').hidden = false;
 });
 $('pass-close').addEventListener('click', () => { $('pass').hidden = true; });
-$('pass-make').addEventListener('click', () => {
-  const name = $('pass-name').value.trim() || 'Юный краевед';
-  const W = 1200, H = 850, c = document.createElement('canvas'); c.width = W; c.height = H;
-  const g = c.getContext('2d');
-  g.fillStyle = '#f6eedf'; g.fillRect(0, 0, W, H);
-  g.strokeStyle = '#b8862b'; g.lineWidth = 14; g.strokeRect(30, 30, W - 60, H - 60);
-  g.lineWidth = 3; g.strokeRect(55, 55, W - 110, H - 110);
-  g.textAlign = 'center'; g.fillStyle = '#3b2a17';
-  g.font = 'bold 74px Georgia, serif'; g.fillText('ГРАМОТА', W / 2, 175);
-  g.font = 'italic 34px Georgia, serif'; g.fillStyle = '#8a5a12'; g.fillText('Знаток истории Троицка', W / 2, 228);
-  g.fillStyle = '#3b2a17'; g.font = '30px Georgia, serif'; g.fillText('вручается', W / 2, 300);
-  let fs = 72; g.font = `bold ${fs}px Georgia, serif`;
-  while (g.measureText(name).width > W - 200 && fs > 30) { fs -= 4; g.font = `bold ${fs}px Georgia, serif`; }
-  g.fillText(name, W / 2, 390);
-  g.font = '28px Georgia, serif';
-  g.fillText(`за путешествие во времени по ${places.length} историческим местам города:`, W / 2, 460);
-  g.font = '24px Georgia, serif'; g.fillStyle = '#5a4630';
-  const names = places.map(p => p.title), half = Math.ceil(names.length / 2);
-  [names.slice(0, half).join(' · '), names.slice(half).join(' · ')]
-    .forEach((t, i) => g.fillText(t, W / 2, 515 + i * 40, W - 160));
-  g.fillStyle = '#3b2a17'; g.font = 'italic 26px Georgia, serif';
-  g.fillText('«Троицк сквозь время» · ' + new Date().toLocaleDateString('ru-RU'), W / 2, 700);
-  g.beginPath(); g.arc(W - 190, H - 190, 70, 0, 7); g.fillStyle = '#c8962e'; g.fill();
-  g.fillStyle = '#fff8ea'; g.font = 'bold 26px Georgia, serif'; g.fillText('1743', W - 190, H - 180);
-  const url = c.toDataURL('image/png');
-  $('pass-img').src = url; $('pass-dl').href = url; $('pass-dl').download = 'Грамота — ' + name + '.png';
-  $('pass-cert').hidden = false;
-  try { localStorage.setItem('tq-name', JSON.stringify(name)); } catch (e) {}
-});
 
 // ---- озвучка текста (голос заранее записан в audio/<место>/<год>.mp3) ----
 // Если ученик включил «Слушать», озвучка не обрывается при движении ползунка:
