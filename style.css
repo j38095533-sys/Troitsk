@@ -190,3 +190,13 @@ body.intro #chips, body.intro #game-btn, body.intro #top p, body.intro #pass-btn
 #pass-cert img { width: 100%; margin-top: 12px; border-radius: 8px; }
 #pass-cert a { display: block; text-align: center; margin-top: 8px; color: var(--accent); font-weight: 700; }
 .g-solo { background: #7b4fd6; } .g-stars { font-size: 40px; }
+
+#place-sum { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: #c8962e1a; border: 1px solid #c8962e44; }
+#place-sum[hidden] { display: none; }
+#place-sum h3 { margin: 0 0 6px; font: 700 15px Georgia, serif; color: var(--accent); }
+#place-sum ul, .g-sum ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.45; }
+#place-sum li, .g-sum li { margin: 4px 0; }
+.g-review { background: #2c7a6b; }
+.g-sum { text-align: left; background: #ffffff0d; border-radius: 12px; padding: 10px 12px; }
+.g-sum summary { font-weight: 800; font-size: 16px; cursor: pointer; }
+.g-sum[open] summary { color: var(--accent); margin-bottom: 6px; }

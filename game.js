@@ -19,14 +19,14 @@ const loadBank = () => bank ? Promise.resolve(bank) : fetch('data/quiz.json').th
 
 const screen = $('game');
 function show(html) { screen.hidden = false; document.body.classList.add('in-game'); const box = $('game-box'); box.innerHTML = ''; box.append(...[].concat(html)); }
-function close() { screen.hidden = true; document.body.classList.remove('in-game'); if (client) { try { client.end(true); } catch (e) {} client = null; } clearInterval(timerId); }
+function close() { clearInterval(beatId); clearInterval(watchId); screen.hidden = true; document.body.classList.remove('in-game'); if (client) { try { client.end(true); } catch (e) {} client = null; } clearInterval(timerId); }
 $('game-close').addEventListener('click', () => { if (role === 'host' && phase !== 'end' && phase !== 'menu' && !confirm('Закончить игру?')) return; if (role === 'host') publishState({ phase: 'end', scores: board() }); close(); });
 
 // ---------- подключение к брокеру ----------
 let client = null;
 function connect(idx) {
   return new Promise((res, rej) => {
-    const c = mqtt.connect(BROKERS[idx], { connectTimeout: 7000, reconnectPeriod: 2000, clean: true,
+    const c = mqtt.connect(BROKERS[idx], { connectTimeout: 7000, reconnectPeriod: 2000, clean: true, keepalive: 15, resubscribe: true,
       clientId: 'tq_' + Math.random().toString(16).slice(2, 10) });
     const t = setTimeout(() => { c.end(true); rej(new Error('timeout')); }, 8000);
     c.once('connect', () => { clearTimeout(t); res(c); });
@@ -48,8 +48,10 @@ function menu() {
   const b3 = el('button', 'g-big g-solo', 'Играть одному');
   b1.onclick = () => studentJoin(pin); b2.onclick = teacherLogin; b3.onclick = soloStart;
   const best = store.get('tq-best', 0);
+  const review = el('button', 'g-big g-review', '📖 Повторить перед игрой'); review.onclick = summaryScreen;
   show([el('h2', 'g-title', 'Викторина «Троицк сквозь время»'),
     el('p', 'g-sub', 'Учитель создаёт игру, ученики входят по коду со своих телефонов.'), b1, b2,
+    review,
     el('p', 'g-sub', 'Или потренируйся сам — 10 вопросов на время' + (best ? ` (твой рекорд: ${best})` : '') + ':'), b3]);
   if (pin) studentJoin(pin);
 }
@@ -72,7 +74,8 @@ function studentJoin(pin) {
       me = { id: store.get('tq-id', null) || Math.random().toString(36).slice(2, 10), name: n, pin: p };
       store.set('tq-id', me.id);
       client.subscribe(ROOT + p + '/state', { qos: 1 });
-      client.on('message', (t, m) => { if (!m.length) return; try { onState(JSON.parse(m.toString())); } catch (e) {} });
+      client.on('message', (t, m) => { lastMsgAt = Date.now(); if (!m.length) return; try { onState(JSON.parse(m.toString())); } catch (e) {} });
+      lastMsgAt = Date.now(); startWatchdog(p);
       const hello = () => client.publish(ROOT + p + '/join', JSON.stringify({ id: me.id, name: n }), { qos: 1 });
       hello(); client.on('connect', hello);
       waitScreen('Ты в игре, ' + n + '!', 'Смотри на экран учителя — скоро начнём.');
@@ -81,11 +84,34 @@ function studentJoin(pin) {
   };
   show([el('h2', 'g-title', 'Вход в игру'), inPin, inName, go, err]);
 }
-function waitScreen(t, s) { show([el('div', 'g-wait-dot'), el('h2', 'g-title', t), el('p', 'g-sub', s)]); }
+function waitScreen(t, s) {
+  const parts = [el('div', 'g-wait-dot'), el('h2', 'g-title', t), el('p', 'g-sub', s)];
+  if (role === 'student') { const r = el('button', 'g-link', '↻ Обновить, если завис'); r.onclick = () => resync(true); parts.push(r); }
+  show(parts);
+}
+
+// сторож: учитель шлёт состояние каждые 4 с; тишина > 10 с = связь уснула — переподключаемся и берём сохранённое состояние
+let lastMsgAt = 0, watchId = null, rendered = '';
+function resync(force) {
+  if (!client || !me) return;
+  lastMsgAt = Date.now();
+  if (force) rendered = '';
+  const t = ROOT + me.pin + '/state';
+  if (!client.connected) { try { client.reconnect(); } catch (e) {} return; }
+  client.unsubscribe(t, () => client.subscribe(t, { qos: 1 }));     // повторная подписка отдаёт retained-состояние
+}
+function startWatchdog() {
+  clearInterval(watchId);
+  watchId = setInterval(() => { if (role === 'student' && client && Date.now() - lastMsgAt > 10000) resync(false); }, 2000);
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && role === 'student') resync(false); });
 
 let timerId = null;
 function onState(s) {
   lastState = s;
+  const key = s.phase + ':' + (s.qi ?? '') + (s.phase === 'lobby' ? ':' + s.players : '');
+  if (key === rendered) return;                    // повтор от учителя — экран уже актуален
+  rendered = key;
   if (s.phase === 'lobby') waitScreen('Ты в игре, ' + me.name + '!', 'Ждём остальных. Игроков: ' + (s.players || 0));
   else if (s.phase === 'question') studentQuestion(s);
   else if (s.phase === 'reveal') studentReveal(s);
@@ -153,7 +179,8 @@ async function teacherSetup() {
   const b = await loadBank(); const own = store.get('tq-own', []);
   const placeNames = { passazh: 'Пассаж', sobor: 'Собор', kazan: 'Монастырь', vokzal: 'Вокзал', ryady: 'Гостиный двор',
     ploshad: 'Администрация', mikhail: 'Михайловская церковь', torg: 'Торговые ряды', erahtin: 'Дом Ерахтина', licey13: 'Лицей №13' };
-  const places = [...new Set(b.map(q => q.place).filter(Boolean))];
+  const places = [...new Set(b.map(q => q.place).filter(Boolean))].concat(b.some(q => !q.place) ? ['__town'] : []);
+  placeNames.__town = 'Весь город';
   const sel = new Set(places);
   const chips = el('div', 'g-chips');
   places.forEach(p => { const c = el('button', 'g-chip on', placeNames[p] || p);
@@ -162,11 +189,12 @@ async function teacherSetup() {
   nSel.value = 10;
   const tSel = el('select', 'g-input'); [10, 20, 30].forEach(t => tSel.append(new Option(t + ' секунд на ответ', t))); tSel.value = 20;
   const info = el('p', 'g-sub');
-  const count = () => { const n = b.filter(q => !q.place || sel.has(q.place)).length + own.length; info.textContent = `Доступно вопросов: ${n} (своих: ${own.length})`; };
+  const pick = () => b.filter(q => sel.has(q.place || '__town'));
+  const count = () => { const n = pick().length + own.length; info.textContent = `Доступно вопросов: ${n} (своих: ${own.length})`; };
   count();
   const go = el('button', 'g-big g-teacher', 'Создать игру');
   go.onclick = () => {
-    let qs = shuffle(b.filter(q => !q.place || sel.has(q.place)).concat(own));
+    let qs = shuffle(pick().concat(own));
     if (nSel.value !== 'все') qs = qs.slice(0, +nSel.value);
     if (!qs.length) { info.textContent = 'Выберите хотя бы одно место'; return; }
     hostGame(qs, +tSel.value);
@@ -193,7 +221,19 @@ function ownEditor() {
 
 // ---- ведение игры ----
 let H = null;   // { pin, qs, dur, players:Map, qi, answers:Map, t0 }
-function publishState(s) { if (client && H) client.publish(ROOT + H.pin + '/state', JSON.stringify(s), { qos: 1, retain: true }); }
+let lastPub = null, beatId = null;
+function publishState(s) {
+  if (!client || !H) return;
+  if (s.phase === 'question') s = { ...s, elapsed: Date.now() - H.t0 };
+  lastPub = s;
+  client.publish(ROOT + H.pin + '/state', JSON.stringify(s), { qos: 1, retain: true });
+  clearInterval(beatId);
+  if (s.phase !== 'end') beatId = setInterval(() => {
+    if (!client || !H || !lastPub) return;
+    const b = lastPub.phase === 'question' ? { ...lastPub, elapsed: Date.now() - H.t0 } : lastPub;
+    client.publish(ROOT + H.pin + '/state', JSON.stringify(b), { qos: 1, retain: true });
+  }, 4000);
+}
 const board = () => H ? [...H.players.values()].sort((a, b) => b.score - a.score) : [];
 
 async function hostGame(qs, dur) {
@@ -252,10 +292,9 @@ function nextQuestion() {
     if (!left) reveal();
   }, 100);
 }
-function sendQuestion(again) {
+function sendQuestion() {
   const q = H.qs[H.qi];
-  publishState({ phase: 'question', qi: H.qi, total: H.qs.length, q: q.q, img: q.img || null, options: q.options, dur: H.dur,
-    elapsed: again ? Date.now() - H.t0 : 0 });
+  publishState({ phase: 'question', qi: H.qi, total: H.qs.length, q: q.q, img: q.img || null, options: q.options, dur: H.dur });
 }
 function reveal() {
   if (phase !== 'question') return; phase = 'reveal'; clearInterval(timerId);
@@ -292,6 +331,24 @@ function podium(sc) {
   [1, 0, 2].forEach(i => { if (!sc[i]) return; const c = el('div', 'g-pod g-pod' + (i + 1));
     c.append(el('div', 'g-podname', sc[i].name), el('div', 'g-podscore', sc[i].score), el('div', 'g-podnum', String(i + 1))); p.append(c); });
   return p;
+}
+
+// ---------- шпаргалка перед игрой ----------
+async function summaryScreen() {
+  const [pl, sm] = await Promise.all([fetch('data/places.json').then(r => r.json()),
+    fetch('data/summary.json').then(r => r.ok ? r.json() : {}).catch(() => ({}))]);
+  const list = (title, items, open) => {
+    const d = el('details', 'g-sum'); if (open) d.open = true;
+    d.append(el('summary', '', title));
+    const ul = el('ul'); (items || []).forEach(t => ul.append(el('li', '', t))); d.append(ul); return d;
+  };
+  const back = el('button', 'g-link', '‹ В меню игры'); back.onclick = menu;
+  const solo = el('button', 'g-big g-solo', 'Проверить себя — играть одному'); solo.onclick = soloStart;
+  const parts = [el('h2', 'g-title', 'Шпаргалка перед игрой'), el('p', 'g-sub', 'Главные факты — все вопросы викторины отсюда.')];
+  if (sm.town) parts.push(list('Троицк: коротко о городе', sm.town, true));
+  pl.filter(p => (p.summary || []).length).forEach(p => parts.push(list(p.title, p.summary, false)));
+  parts.push(solo, back);
+  show(parts);
 }
 
 // ---------- одиночная игра ----------

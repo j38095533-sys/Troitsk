@@ -178,6 +178,9 @@ function openStreet(pl) {
   const frames = $('frames'); frames.innerHTML = '';
   $('place-title').textContent = pl.title;
   $('place-intro').textContent = pl.intro || '';
+  const sum = $('place-sum'), ul = sum.querySelector('ul'); ul.innerHTML = '';
+  (pl.summary || []).forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+  sum.hidden = !(pl.summary || []).length;
   const slider = $('slider'), ticks = $('ticks');
   ticks.innerHTML = '';
   if (!list.length) list.push({ year: 'скоро', text: 'Материалы по этому месту готовятся.' });
