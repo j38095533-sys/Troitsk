@@ -206,3 +206,34 @@ body.intro #chips, body.intro #game-btn, body.intro #top p, body.intro #pass-btn
 
 .top-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; pointer-events: auto; }
 .top-btns #pass-btn { margin-top: 0; }
+
+/* ---------- слой «Караванные пути» ---------- */
+#caravan-btn { background: #1d1814e6; color: var(--ink); border: 1px solid #ffffff30; border-radius: 999px; padding: 7px 12px; font-size: 14px; font-weight: 700; }
+#caravan-btn.on { background: #e0a43a; color: #1a1208; border-color: #e0a43a; }
+body.intro #caravan-btn, body.in-street #caravan-btn { opacity: 0; pointer-events: none; }
+body.caravan-on .maplibregl-marker.pin { opacity: .35 !important; }
+body.caravan-on #chips { display: none; }
+.cv-pin { position: absolute; width: 34px; height: 34px; border-radius: 50%; background: #e0a43a; border: 3px solid #fff6e0;
+  display: grid; place-items: center; font-size: 17px; box-shadow: 0 2px 10px #0008; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.cv-pin.area { background: #b8782a; }
+.cv-label { position: absolute; top: 36px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 12px; font-weight: 700;
+  color: #fff1cf; text-shadow: 0 1px 3px #000, 0 0 6px #000; pointer-events: none; }
+#caravan { position: fixed; left: 0; right: 0; bottom: 0; z-index: 12; max-height: 52vh; overflow-y: auto; background: #1f1810f2;
+  border-top: 2px solid #e0a43a; border-radius: 18px 18px 0 0; padding: 16px 16px calc(18px + env(safe-area-inset-bottom));
+  box-shadow: 0 -10px 30px #000a; max-width: 640px; margin: 0 auto; }
+#caravan[hidden] { display: none; }
+#caravan h2 { font: 700 22px Georgia, serif; color: #f3c66b; margin: 0 40px 8px 0; }
+#caravan h3 { font: 700 16px Georgia, serif; color: #f3c66b; margin: 14px 0 6px; }
+#caravan p { font-size: 15px; line-height: 1.5; margin: 6px 0; }
+.cv-close { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid #ffffff30; background: #0006; color: var(--ink); }
+.cv-back { background: none; border: 0; color: #f3c66b; font-size: 14px; font-weight: 700; padding: 0 0 6px; }
+.cv-svg { width: 100%; max-width: 420px; display: block; margin: 8px auto; }
+.cv-t { font: 600 10px system-ui, sans-serif; fill: #e9dcc6; } .cv-t.b { font-size: 12px; font-weight: 800; fill: #fff; }
+.cv-note { font-size: 13px !important; color: var(--muted); }
+.cv-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.cv-list li { padding: 10px 12px; border-radius: 10px; background: #ffffff0d; font-weight: 600; font-size: 14px; cursor: pointer; }
+.cv-list li i { color: var(--muted); font-weight: 400; font-style: normal; font-size: 12px; }
+.cv-facts { margin-top: 12px; background: #e0a43a14; border: 1px solid #e0a43a44; border-radius: 12px; padding: 10px 12px; }
+.cv-facts summary { font-weight: 800; color: #f3c66b; cursor: pointer; }
+.cv-facts ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.45; }
+.cv-src { font-size: 11px !important; color: var(--muted); } .cv-src a { color: var(--muted); }

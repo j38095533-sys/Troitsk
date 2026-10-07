@@ -178,7 +178,7 @@ function teacherLogin() {
 async function teacherSetup() {
   const b = await loadBank(); const own = store.get('tq-own', []);
   const placeNames = { passazh: 'Пассаж', sobor: 'Собор', kazan: 'Монастырь', vokzal: 'Вокзал', ryady: 'Гостиный двор',
-    ploshad: 'Администрация', mikhail: 'Михайловская церковь', torg: 'Торговые ряды', erahtin: 'Дом Ерахтина', licey13: 'Лицей №13' };
+    ploshad: 'Администрация', mikhail: 'Михайловская церковь', torg: 'Торговые ряды', erahtin: 'Дом Ерахтина', licey13: 'Лицей №13', caravan: 'Караванные пути' };
   const places = [...new Set(b.map(q => q.place).filter(Boolean))].concat(b.some(q => !q.place) ? ['__town'] : []);
   placeNames.__town = 'Весь город';
   const sel = new Set(places);
@@ -346,6 +346,7 @@ async function summaryScreen() {
   const solo = el('button', 'g-big g-solo', 'Проверить себя — играть одному'); solo.onclick = soloStart;
   const parts = [el('h2', 'g-title', 'Шпаргалка перед игрой'), el('p', 'g-sub', 'Главные факты — все вопросы викторины отсюда.')];
   if (sm.town) parts.push(list('Троицк: коротко о городе', sm.town, true));
+  if (sm.caravan) parts.push(list('Караванные пути', sm.caravan, false));
   pl.filter(p => (p.summary || []).length).forEach(p => parts.push(list(p.title, p.summary, false)));
   parts.push(solo, back);
   show(parts);

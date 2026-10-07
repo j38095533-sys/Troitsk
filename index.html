@@ -14,7 +14,7 @@
 <header id="top">
   <h1>Троицк <span>сквозь время</span></h1>
   <p>Нажми на светящуюся точку</p>
-  <div class="top-btns"><button id="pass-btn">🏅 0 из 0</button></div>
+  <div class="top-btns"><button id="pass-btn">🏅 0 из 0</button><button id="caravan-btn">🐫 Караванные пути</button></div>
 </header>
 <button id="game-btn">🎮 Игра</button>
 
@@ -67,6 +67,8 @@
   </div>
 </div>
 
+<section id="caravan" hidden></section>
+
 <div id="orig" hidden>
   <img id="orig-img" alt="Подлинное архивное фото">
   <div id="orig-credit"></div>
@@ -80,5 +82,6 @@
 <script src="lib/mqtt.min.js" defer></script>
 <script src="lib/qrcode.js" defer></script>
 <script src="game.js?v=9" defer></script>
+<script src="caravan.js?v=9" defer></script>
 </body>
 </html>
