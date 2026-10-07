@@ -236,6 +236,7 @@ function showEra(list, i) {
   $('recon').textContent = e.photo ? (today ? 'Кадр собран по современному фото' :
     `Реконструкция по архивному фото (${e.label || e.year}). Камера та же, меняется только время.` + (e.note ? ' ' + e.note : '')) : '';
   $('orig-btn').hidden = !origOf(e);
+  setVoice(curPlace && e.year ? `audio/${curPlace.id}/${e.year}.mp3` : null);
   const todayE = curList[curList.length - 1];
   $('cmp-btn').hidden = !(curList.length > 1 && e !== todayE);
   if (!$('cmp').hidden) (e === todayE ? closeCompare() : openCompare());
@@ -281,6 +282,7 @@ $('cmp-btn').addEventListener('click', () => ($('cmp').hidden ? openCompare() : 
 })();
 
 $('back').addEventListener('click', () => {
+  stopVoice();
   closeCompare(); hideHint();
   const s = $('street'); s.classList.remove('show');
   setTimeout(() => { s.hidden = true; }, 900);
@@ -357,3 +359,24 @@ $('pass-make').addEventListener('click', () => {
   $('pass-cert').hidden = false;
   try { localStorage.setItem('tq-name', JSON.stringify(name)); } catch (e) {}
 });
+
+// ---- озвучка текста (голос заранее записан в audio/<место>/<год>.mp3) ----
+const voice = new Audio(); voice.preload = 'none';
+let voiceSrc = null;
+function setVoice(src) {
+  stopVoice(); voiceSrc = src;
+  const b = $('voice-btn'); b.hidden = !src;
+  if (!src) return;
+  fetch(src, { method: 'HEAD' }).then(r => { if (!r.ok && voiceSrc === src) b.hidden = true; }).catch(() => {});
+}
+function stopVoice() {
+  voice.pause(); voice.currentTime = 0;
+  const b = $('voice-btn'); b.textContent = '▶ Слушать'; b.classList.remove('on');
+}
+$('voice-btn').addEventListener('click', () => {
+  const b = $('voice-btn');
+  if (!voice.paused) { voice.pause(); b.textContent = '▶ Дальше'; b.classList.remove('on'); return; }
+  if (!voice.src.endsWith(voiceSrc)) voice.src = voiceSrc;
+  voice.play().then(() => { b.textContent = '❚❚ Пауза'; b.classList.add('on'); }).catch(() => { b.textContent = 'Нет звука'; });
+});
+voice.addEventListener('ended', () => { const b = $('voice-btn'); b.textContent = '↻ Ещё раз'; b.classList.remove('on'); voice.currentTime = 0; });

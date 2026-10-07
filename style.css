@@ -200,3 +200,6 @@ body.intro #chips, body.intro #game-btn, body.intro #top p, body.intro #pass-btn
 .g-sum { text-align: left; background: #ffffff0d; border-radius: 12px; padding: 10px 12px; }
 .g-sum summary { font-weight: 800; font-size: 16px; cursor: pointer; }
 .g-sum[open] summary { color: var(--accent); margin-bottom: 6px; }
+
+#voice-btn { background: #2c7a6b; color: #fff; border: 0; border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+#voice-btn.on { background: var(--accent); color: #1a1208; }

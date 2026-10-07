@@ -1,5 +1,5 @@
 // Кэш: оболочка сайта сразу, остальное (тайлы, картинки) — по мере просмотра. Работает и при плохой связи.
-const VERSION = 'troitsk-v5';
+const VERSION = 'troitsk-v6';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'lib/maplibre-gl.js', 'lib/maplibre-gl.css',
   'lib/pmtiles.js', 'lib/basemaps.js', 'data/places.json', 'data/eras.json',
   'game.js', 'lib/mqtt.min.js', 'lib/qrcode.js', 'data/quiz.json', 'data/summary.json'];
@@ -16,7 +16,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   // .pmtiles читается кусками (Range): держим файл в кэше целиком и сами отдаём нужный кусок
   if (req.headers.has('range')) {
-    if (!/\.pmtiles$/.test(new URL(req.url).pathname)) return;
+    if (!/\.(pmtiles|mp3)$/.test(new URL(req.url).pathname)) return;
     e.respondWith(rangeFromCache(req));
     return;
   }
@@ -33,15 +33,15 @@ self.addEventListener('fetch', e => {
   }
 });
 
-let pmBuf = null;            // файл карты в памяти воркера (Promise<ArrayBuffer>)
+const bufs = new Map();      // файлы, читаемые кусками (карта, озвучка), в памяти воркера
 function loadPm(url) {
-  if (!pmBuf) pmBuf = (async () => {
+  if (!bufs.has(url)) bufs.set(url, (async () => {
     const cache = await caches.open(VERSION);
     let r = await cache.match(url);
     if (!r) { r = await fetch(url); if (!r.ok) throw new Error('pmtiles ' + r.status); await cache.put(url, r.clone()); }
     return r.arrayBuffer();
-  })().catch(err => { pmBuf = null; throw err; });
-  return pmBuf;
+  })().catch(err => { bufs.delete(url); throw err; }));
+  return bufs.get(url);
 }
 
 async function rangeFromCache(req) {
@@ -51,5 +51,5 @@ async function rangeFromCache(req) {
   const start = +m[1], end = m[2] ? Math.min(+m[2], buf.byteLength - 1) : buf.byteLength - 1;
   return new Response(buf.slice(start, end + 1), { status: 206, headers: {
     'Content-Range': `bytes ${start}-${end}/${buf.byteLength}`, 'Content-Length': String(end - start + 1),
-    'Content-Type': 'application/octet-stream', 'Accept-Ranges': 'bytes' } });
+    'Content-Type': /\.mp3$/.test(req.url) ? 'audio/mpeg' : 'application/octet-stream', 'Accept-Ranges': 'bytes' } });
 }
