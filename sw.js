@@ -1,5 +1,5 @@
 // Кэш: оболочка сайта сразу, остальное (тайлы, картинки) — по мере просмотра. Работает и при плохой связи.
-const VERSION = 'troitsk-v6';
+const VERSION = 'troitsk-v7';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'lib/maplibre-gl.js', 'lib/maplibre-gl.css',
   'lib/pmtiles.js', 'lib/basemaps.js', 'data/places.json', 'data/eras.json',
   'game.js', 'lib/mqtt.min.js', 'lib/qrcode.js', 'data/quiz.json', 'data/summary.json'];
@@ -23,7 +23,7 @@ self.addEventListener('fetch', e => {
   const fresh = /\.(html|js|css|json)$|\/$/.test(new URL(req.url).pathname);
   if (fresh) {
     // сначала сеть (чтобы обновления доходили), при отсутствии сети — кэш
-    e.respondWith(fetch(req).then(r => { const c = r.clone(); caches.open(VERSION).then(x => x.put(req, c)); return r; })
+    e.respondWith(fetch(req, { cache: 'no-cache' }).then(r => { const c = r.clone(); caches.open(VERSION).then(x => x.put(req, c)); return r; })
       .catch(() => caches.match(req)));
   } else {
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => {
