@@ -364,26 +364,31 @@ $('pass-make').addEventListener('click', () => {
 });
 
 // ---- озвучка текста (голос заранее записан в audio/<место>/<год>.mp3) ----
+// Если ученик включил «Слушать», озвучка не обрывается при движении ползунка:
+// через полсекунды после остановки ползунка начинается текст нового года.
 const voice = new Audio(); voice.preload = 'none';
-let voiceSrc = null;
-function setVoice(src) {
-  stopVoice(); voiceSrc = src;
-  const b = $('voice-btn'); b.hidden = !src;
-  if (!src) return;
-  fetch(src, { method: 'HEAD' }).then(r => { if (!r.ok && voiceSrc === src) b.hidden = true; }).catch(() => {});
+let voiceSrc = null, listening = false, voiceTimer = null;
+const vbtn = t => { const b = $('voice-btn'); b.textContent = t; b.classList.toggle('on', t.startsWith('❚❚')); };
+function playVoice() {
+  if (!voiceSrc) return;
+  if (!voice.src.endsWith(voiceSrc)) voice.src = voiceSrc;
+  voice.play().then(() => vbtn('❚❚ Пауза')).catch(() => vbtn('Нет звука'));
 }
-function stopVoice() {
-  voice.pause(); voice.currentTime = 0;
-  const b = $('voice-btn'); b.textContent = '▶ Слушать'; b.classList.remove('on');
+function setVoice(src) {
+  voiceSrc = src; clearTimeout(voiceTimer);
+  const b = $('voice-btn'); b.hidden = !src;
+  if (!src) { voice.pause(); return; }
+  fetch(src, { method: 'HEAD' }).then(r => { if (!r.ok && voiceSrc === src) b.hidden = true; }).catch(() => {});
+  if (listening) {                       // продолжаем слушать уже новый год
+    voice.pause(); vbtn('❚❚ Пауза');
+    voiceTimer = setTimeout(() => { voice.currentTime = 0; playVoice(); }, 450);
+  } else { voice.pause(); voice.currentTime = 0; vbtn('▶ Слушать'); }
+}
+function stopVoice() {                   // уход с места — озвучка выключается совсем
+  listening = false; clearTimeout(voiceTimer); voice.pause(); voice.currentTime = 0; vbtn('▶ Слушать');
 }
 $('voice-btn').addEventListener('click', () => {
-  const b = $('voice-btn');
-  if (!voice.paused) { voice.pause(); b.textContent = '▶ Дальше'; b.classList.remove('on'); return; }
-  if (!voice.src.endsWith(voiceSrc)) voice.src = voiceSrc;
-  voice.play().then(() => { b.textContent = '❚❚ Пауза'; b.classList.add('on'); }).catch(() => { b.textContent = 'Нет звука'; });
+  if (listening && !voice.paused) { listening = false; voice.pause(); vbtn('▶ Дальше'); return; }
+  listening = true; playVoice();
 });
-voice.addEventListener('ended', () => { const b = $('voice-btn'); b.textContent = '↻ Ещё раз'; b.classList.remove('on'); voice.currentTime = 0; });
-
-// ---- обучающее видео ----
-$('howto-btn').addEventListener('click', () => { $('howto').hidden = false; const v = $('howto-video'); v.currentTime = 0; v.play().catch(() => {}); });
-$('howto-close').addEventListener('click', () => { const v = $('howto-video'); v.pause(); $('howto').hidden = true; });
+voice.addEventListener('ended', () => { vbtn('↻ Ещё раз'); voice.currentTime = 0; });
