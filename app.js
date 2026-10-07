@@ -383,3 +383,7 @@ $('voice-btn').addEventListener('click', () => {
   voice.play().then(() => { b.textContent = '❚❚ Пауза'; b.classList.add('on'); }).catch(() => { b.textContent = 'Нет звука'; });
 });
 voice.addEventListener('ended', () => { const b = $('voice-btn'); b.textContent = '↻ Ещё раз'; b.classList.remove('on'); voice.currentTime = 0; });
+
+// ---- обучающее видео ----
+$('howto-btn').addEventListener('click', () => { $('howto').hidden = false; const v = $('howto-video'); v.currentTime = 0; v.play().catch(() => {}); });
+$('howto-close').addEventListener('click', () => { const v = $('howto-video'); v.pause(); $('howto').hidden = true; });

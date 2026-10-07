@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#14110f">
 <title>Троицк сквозь время</title>
 <link rel="stylesheet" href="lib/maplibre-gl.css">
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 <div id="map"></div>
@@ -14,7 +14,7 @@
 <header id="top">
   <h1>Троицк <span>сквозь время</span></h1>
   <p>Нажми на светящуюся точку</p>
-  <button id="pass-btn">🏅 0 из 0</button>
+  <div class="top-btns"><button id="pass-btn">🏅 0 из 0</button><button id="howto-btn">▶ Как пользоваться</button></div>
 </header>
 <button id="game-btn">🎮 Игра</button>
 
@@ -67,6 +67,11 @@
   </div>
 </div>
 
+<div id="howto" hidden>
+  <button id="howto-close" aria-label="Закрыть">✕</button>
+  <video id="howto-video" src="howto.mp4" poster="howto.jpg" controls playsinline preload="none"></video>
+</div>
+
 <div id="orig" hidden>
   <img id="orig-img" alt="Подлинное архивное фото">
   <div id="orig-credit"></div>
@@ -76,9 +81,9 @@
 <script src="lib/maplibre-gl.js"></script>
 <script src="lib/pmtiles.js"></script>
 <script src="lib/basemaps.js"></script>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 <script src="lib/mqtt.min.js" defer></script>
 <script src="lib/qrcode.js" defer></script>
-<script src="game.js?v=7" defer></script>
+<script src="game.js?v=8" defer></script>
 </body>
 </html>
