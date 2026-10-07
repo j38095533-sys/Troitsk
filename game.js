@@ -45,9 +45,12 @@ function menu() {
   role = null; phase = 'menu';
   const pin = new URLSearchParams(location.search).get('pin');
   const b1 = el('button', 'g-big g-student', 'Я ученик'), b2 = el('button', 'g-big g-teacher', 'Я учитель');
-  b1.onclick = () => studentJoin(pin); b2.onclick = teacherLogin;
+  const b3 = el('button', 'g-big g-solo', 'Играть одному');
+  b1.onclick = () => studentJoin(pin); b2.onclick = teacherLogin; b3.onclick = soloStart;
+  const best = store.get('tq-best', 0);
   show([el('h2', 'g-title', 'Викторина «Троицк сквозь время»'),
-    el('p', 'g-sub', 'Учитель создаёт игру, ученики входят по коду со своих телефонов.'), b1, b2]);
+    el('p', 'g-sub', 'Учитель создаёт игру, ученики входят по коду со своих телефонов.'), b1, b2,
+    el('p', 'g-sub', 'Или потренируйся сам — 10 вопросов на время' + (best ? ` (твой рекорд: ${best})` : '') + ':'), b3]);
   if (pin) studentJoin(pin);
 }
 window.openGame = menu;
@@ -289,6 +292,58 @@ function podium(sc) {
   [1, 0, 2].forEach(i => { if (!sc[i]) return; const c = el('div', 'g-pod g-pod' + (i + 1));
     c.append(el('div', 'g-podname', sc[i].name), el('div', 'g-podscore', sc[i].score), el('div', 'g-podnum', String(i + 1))); p.append(c); });
   return p;
+}
+
+// ---------- одиночная игра ----------
+let solo = null;
+async function soloStart() {
+  role = 'solo'; phase = 'solo';
+  const b = await loadBank();
+  const qs = shuffle(b).slice(0, 10).map(q => { const o = shuffle([0, 1, 2, 3]); return { ...q, options: o.map(k => q.options[k]), a: o.indexOf(q.a) }; });
+  solo = { qs, i: -1, score: 0, streak: 0, right: 0 };
+  soloNext();
+}
+function soloNext() {
+  solo.i++;
+  if (solo.i >= solo.qs.length) return soloEnd();
+  const q = solo.qs[solo.i], DUR = 20000, t0 = Date.now();
+  const bar = el('div', 'g-timer'); const fill = el('i'); bar.append(fill);
+  const btns = el('div', 'g-answers');
+  const answer = c => {
+    clearInterval(timerId);
+    const ms = Date.now() - t0, ok = c === q.a;
+    let pts = 0;
+    if (ok) { solo.streak++; solo.right++; pts = Math.round(500 + 500 * (1 - Math.min(ms, DUR) / DUR)) + (solo.streak > 1 ? 100 * Math.min(solo.streak - 1, 5) : 0); solo.score += pts; }
+    else solo.streak = 0;
+    if (navigator.vibrate) navigator.vibrate(ok ? 30 : [60, 40, 60]);
+    const next = el('button', 'g-big g-teacher', solo.i + 1 < solo.qs.length ? 'Дальше ›' : 'Итоги ›'); next.onclick = soloNext;
+    show([el('div', 'g-result ' + (ok ? 'g-ok' : 'g-bad'), c < 0 ? 'Время вышло' : ok ? 'Верно!' : 'Неверно'),
+      el('p', 'g-sub', ok ? `+${pts} очков` + (solo.streak > 1 ? ` · серия ${solo.streak} 🔥` : '') : 'Правильный ответ: ' + q.options[q.a]),
+      el('p', 'g-explain', q.explain || ''), el('div', 'g-score', 'Очки: ' + solo.score), next]);
+  };
+  q.options.forEach((o, i) => {
+    const b = el('button', 'g-ans g-c' + i); b.append(el('span', 'g-shape', SHAPES[i]), el('span', '', o));
+    b.onclick = () => answer(i); btns.append(b);
+  });
+  const parts = [el('div', 'g-qnum', `Вопрос ${solo.i + 1} из ${solo.qs.length} · очки ${solo.score}`), el('h2', 'g-q', q.q)];
+  if (q.img) { const im = el('img', 'g-qimg'); im.src = q.img; parts.push(im); }
+  show([...parts, bar, btns]);
+  clearInterval(timerId);
+  timerId = setInterval(() => {
+    const left = Math.max(0, DUR - (Date.now() - t0)); fill.style.width = (100 * left / DUR) + '%';
+    if (!left) answer(-1);
+  }, 100);
+}
+function soloEnd() {
+  const best = store.get('tq-best', 0), rec = solo.score > best;
+  if (rec) store.set('tq-best', solo.score);
+  const again = el('button', 'g-big g-solo', 'Ещё раз'); again.onclick = soloStart;
+  const menuB = el('button', 'g-link', '‹ В меню игры'); menuB.onclick = menu;
+  const stars = solo.right >= 9 ? '⭐⭐⭐' : solo.right >= 6 ? '⭐⭐' : solo.right >= 3 ? '⭐' : '';
+  show([el('h2', 'g-title', 'Итоги'), el('div', 'g-stars', stars),
+    el('div', 'g-result g-ok', solo.score + ' очков'),
+    el('p', 'g-sub', `Правильных ответов: ${solo.right} из ${solo.qs.length}` + (rec ? ' · новый рекорд! 🎉' : ` · рекорд: ${best}`)),
+    again, menuB]);
 }
 
 // ссылка вида ?pin=123456 сразу открывает вход ученика

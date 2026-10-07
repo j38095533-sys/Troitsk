@@ -1,6 +1,8 @@
 'use strict';
 // Троицк сквозь время: карта → пролёт к точке → вид улицы со слайдером лет.
 
+// вступительный пролёт из космоса (один раз за сеанс; ?debug — без него)
+const INTRO = !location.search.includes('debug') && !sessionStorage.getItem('troitsk-intro');
 let OVERVIEW = { center: [61.556, 54.093], zoom: 13.2, pitch: 25, bearing: 0 };
 const BOUNDS = [[61.45, 53.98], [61.70, 54.15]];
 
@@ -16,13 +18,13 @@ const labelLayers = basemaps.layers('pm', basemaps.namedFlavor('dark'), { lang: 
 const map = new maplibregl.Map({
   container: 'map',
   maxPitch: 85,
-  maxBounds: [[61.35, 53.93], [61.80, 54.20]],
-  minZoom: 10,
-  ...OVERVIEW,
+  minZoom: 1,
+  ...(INTRO ? { center: [61.56, 54.09], zoom: 1.6, pitch: 0, bearing: 0 } : OVERVIEW),
   attributionControl: { compact: true },
   hash: location.search.includes('debug'),
   style: {
     version: 8,
+    projection: { type: 'globe' },
     glyphs: base + 'fonts/{fontstack}/{range}.pbf',
     sprite: base + 'sprites/light',
     sources: {
@@ -30,7 +32,7 @@ const map = new maplibregl.Map({
         bounds: [61.45, 53.98, 61.70, 54.15],
         attribution: 'Спутник: <a href="https://s2maps.eu">Sentinel-2 cloudless 2023 by EOX</a> (Copernicus)' },
       // детальный спутник (онлайн); если не грузится или нет сети — виден Sentinel под ним
-      esri: { type: 'raster', tileSize: 256, maxzoom: 19, minzoom: 10,
+      esri: { type: 'raster', tileSize: 256, maxzoom: 19, minzoom: 0,
         tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
         attribution: 'Спутник: Esri, Maxar, Earthstar Geographics' },
       pm: { type: 'vector', url: 'pmtiles://' + base + 'troitsk.pmtiles',
@@ -40,9 +42,9 @@ const map = new maplibregl.Map({
       'sky-horizon-blend': 0.6, 'horizon-fog-blend': 0.7, 'fog-ground-blend': 0.6, 'atmosphere-blend': 0.8 },
     light: { anchor: 'map', position: [1.3, 210, 35], intensity: 0.45, color: '#fff4e0' },
     layers: [
-      { id: 'bg', type: 'background', paint: { 'background-color': '#3b3a2c' } },
+      { id: 'bg', type: 'background', paint: { 'background-color': '#1c2430' } },
       { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-saturation': -0.15, 'raster-contrast': 0.08 } },
-      { id: 'esri', type: 'raster', source: 'esri', minzoom: 10, paint: { 'raster-fade-duration': 250, 'raster-contrast': 0.05 } },
+      { id: 'esri', type: 'raster', source: 'esri', paint: { 'raster-fade-duration': 250, 'raster-contrast': 0.05 } },
       { id: 'roads', type: 'line', source: 'pm', 'source-layer': 'roads', minzoom: 13,
         filter: ['in', ['get', 'kind'], ['literal', ['major_road', 'medium_road', 'minor_road', 'highway']]],
         paint: { 'line-color': '#f3e9dc', 'line-opacity': 0.35,
@@ -73,10 +75,24 @@ Promise.all([
   const b = new maplibregl.LngLatBounds();
   places.forEach(pl => b.extend(pl.pos));
   const fit = map.cameraForBounds(b, { padding: { top: 120, bottom: 130, left: 90, right: 90 } });
-  if (fit) { OVERVIEW = { center: fit.center, zoom: Math.min(fit.zoom, 15), pitch: 0, bearing: 0 }; map.jumpTo(OVERVIEW); }
-  map.on('load', addPins);
-  if (map.loaded()) addPins();
+  if (fit) OVERVIEW = { center: fit.center, zoom: Math.min(fit.zoom, 15), pitch: 0, bearing: 0 };
+  const ready = () => { addPins(); startIntro(); };
+  if (map.loaded()) ready(); else map.once('load', ready);
+  updatePassport();
 });
+
+function lockToTown() { map.setMinZoom(10); map.setMaxBounds([[61.35, 53.93], [61.80, 54.20]]); document.body.classList.remove('intro'); declutter(); }
+function startIntro() {
+  if (!INTRO) { map.jumpTo(OVERVIEW); lockToTown(); return; }
+  try { sessionStorage.setItem('troitsk-intro', '1'); } catch (e) {}
+  document.body.classList.add('intro');
+  let done = false; const finish = () => { if (!done) { done = true; lockToTown(); } };
+  setTimeout(() => {
+    map.flyTo({ ...OVERVIEW, duration: 6500, curve: 1.6, essential: true });
+    map.once('moveend', finish);
+  }, 1600);
+  setTimeout(finish, 10000);                          // если пролёт прервали касанием
+}
 
 // 3D-дома проявляются только при наклоне камеры: сверху — чистый спутник
 function updateBuildings() {
@@ -91,7 +107,7 @@ map.on('pitch', updateBuildings); map.on('zoom', updateBuildings); map.on('load'
 function declutter() {
   const shown = [...document.querySelectorAll('.pin')].map(p => p.getBoundingClientRect());
   document.querySelectorAll('.pin-label').forEach(l => {
-    l.style.visibility = 'visible';
+    l.style.visibility = '';
     const r = l.getBoundingClientRect();
     const own = l.parentElement.getBoundingClientRect();
     const hit = shown.some(o => o.left !== own.left && !(r.right < o.left - 4 || r.left > o.right + 4 || r.bottom < o.top - 2 || r.top > o.bottom + 2));
@@ -133,6 +149,7 @@ function addPins() {
 let busy = false, current = null;
 function flyToPlace(pl) {
   if (busy) return; busy = true; current = pl;
+  (eras[pl.id] || []).forEach(e => { const i = new Image(); i.src = e.img || `img/${pl.id}/${e.year}.webp`; });
   document.body.classList.add('in-street');
   map.flyTo({ center: pl.pos, zoom: 16.2, pitch: 50, bearing: pl.heading, duration: 2600, curve: 1.5,
     essential: true });
@@ -178,16 +195,30 @@ function openStreet(pl) {
   });
   slider.max = list.length - 1; slider.value = list.length - 1;
   slider.disabled = list.length < 2;
-  slider.oninput = () => showEra(list, +slider.value);
+  let last = list.length - 1;
+  curList = list; curPlace = pl;
+  slider.oninput = () => {
+    const v = +slider.value;
+    if (v !== last) { last = v; if (navigator.vibrate) navigator.vibrate(8); }
+    showEra(list, v); hideHint();
+  };
   showEra(list, list.length - 1);
-  $('panel').scrollTop = 0; $('frames').style.height = '';
+  $('panel').scrollTop = 0; $('frames-box').style.height = '';
   const s = $('street'); s.hidden = false;
   requestAnimationFrame(() => s.classList.add('show'));
+  let hinted = false; try { hinted = !!localStorage.getItem('troitsk-hint'); } catch (e) {}
+  if (list.length > 1 && !hinted) setTimeout(() => { $('hint').hidden = false; }, 1200);
+  updatePassport();
+}
+let curList = [], curPlace = null;
+function hideHint() {
+  if ($('hint').hidden) return;
+  $('hint').hidden = true; try { localStorage.setItem('troitsk-hint', '1'); } catch (e) {}
 }
 
 // при чтении картинка сжимается до ~трети экрана, чтобы текст не прятался
 $('panel').addEventListener('scroll', () => {
-  const fr = $('frames'), full = Math.min(innerWidth * 4 / 3, innerHeight * 0.58), min = innerHeight * 0.3;
+  const fr = $('frames-box'), full = Math.min(innerWidth * 4 / 3, innerHeight * 0.58), min = innerHeight * 0.3;
   fr.style.height = Math.max(min, full - $('panel').scrollTop) + 'px';
 }, { passive: true });
 
@@ -202,6 +233,9 @@ function showEra(list, i) {
   $('recon').textContent = e.photo ? (today ? 'Кадр собран по современному фото' :
     `Реконструкция по архивному фото (${e.label || e.year}). Камера та же, меняется только время.` + (e.note ? ' ' + e.note : '')) : '';
   $('orig-btn').hidden = !origOf(e);
+  const todayE = curList[curList.length - 1];
+  $('cmp-btn').hidden = !(curList.length > 1 && e !== todayE);
+  if (!$('cmp').hidden) (e === todayE ? closeCompare() : openCompare());
   const src = $('era-src'); src.innerHTML = 'Источники: ';
   (e.sources || []).forEach((s, k) => {
     const a = document.createElement('a'); a.href = s.url; a.target = '_blank'; a.rel = 'noopener';
@@ -220,7 +254,31 @@ $('orig-btn').addEventListener('click', () => {
 });
 $('orig').addEventListener('click', ev => { if (ev.target.tagName !== 'A') $('orig').hidden = true; });
 
+// ---- шторка «было / стало» ----
+const imgOf = (pl, e) => e.img || `img/${pl.id}/${e.year}.webp`;
+let cmpX = 50;
+function openCompare() {
+  const old = shown, now = curList[curList.length - 1];
+  $('cmp-a').src = imgOf(curPlace, old); $('cmp-b').src = imgOf(curPlace, now);
+  $('cmp-la').textContent = old.label || old.year; $('cmp-lb').textContent = 'сейчас';
+  $('cmp').hidden = false; $('cmp-btn').classList.add('on'); setCmp(cmpX);
+}
+function closeCompare() { $('cmp').hidden = true; $('cmp-btn').classList.remove('on'); }
+function setCmp(x) {
+  cmpX = Math.max(0, Math.min(100, x));
+  $('cmp-b').style.clipPath = `inset(0 0 0 ${cmpX}%)`; $('cmp-line').style.left = cmpX + '%';
+}
+$('cmp-btn').addEventListener('click', () => ($('cmp').hidden ? openCompare() : closeCompare()));
+(() => {
+  const c = $('cmp'); let drag = false;
+  const at = ev => { const r = c.getBoundingClientRect(); setCmp(100 * (ev.clientX - r.left) / r.width); };
+  c.addEventListener('pointerdown', ev => { drag = true; c.setPointerCapture(ev.pointerId); at(ev); });
+  c.addEventListener('pointermove', ev => { if (drag) at(ev); });
+  c.addEventListener('pointerup', () => { drag = false; });
+})();
+
 $('back').addEventListener('click', () => {
+  closeCompare(); hideHint();
   const s = $('street'); s.classList.remove('show');
   setTimeout(() => { s.hidden = true; }, 900);
   document.body.classList.remove('in-street');
@@ -244,3 +302,55 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
 }
 
 $('game-btn').addEventListener('click', () => window.openGame && window.openGame());
+
+// ---- паспорт знатока: пройденные места и грамота ----
+function updatePassport() {
+  if (!places.length) return;
+  const n = places.filter(p => seenSet().has(p.id)).length;
+  $('pass-btn').textContent = `🏅 ${n} из ${places.length}`;
+  $('pass-btn').classList.toggle('full', n === places.length);
+}
+function savedName() { try { return JSON.parse(localStorage.getItem('tq-name')) || ''; } catch (e) { return ''; } }
+$('pass-btn').addEventListener('click', () => {
+  const seen = seenSet(), list = $('pass-list'); list.innerHTML = '';
+  places.forEach(p => {
+    const li = document.createElement('li'); li.className = seen.has(p.id) ? 'ok' : '';
+    li.textContent = p.title; li.onclick = () => { $('pass').hidden = true; flyToPlace(p); };
+    list.appendChild(li);
+  });
+  const left = places.filter(p => !seen.has(p.id)).length;
+  $('pass-done').hidden = left > 0; $('pass-todo').hidden = left === 0;
+  $('pass-todo').textContent = `Осталось мест: ${left}. Пройди все — получишь грамоту!`;
+  $('pass-name').value = savedName();
+  $('pass-cert').hidden = true; $('pass').hidden = false;
+});
+$('pass-close').addEventListener('click', () => { $('pass').hidden = true; });
+$('pass-make').addEventListener('click', () => {
+  const name = $('pass-name').value.trim() || 'Юный краевед';
+  const W = 1200, H = 850, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#f6eedf'; g.fillRect(0, 0, W, H);
+  g.strokeStyle = '#b8862b'; g.lineWidth = 14; g.strokeRect(30, 30, W - 60, H - 60);
+  g.lineWidth = 3; g.strokeRect(55, 55, W - 110, H - 110);
+  g.textAlign = 'center'; g.fillStyle = '#3b2a17';
+  g.font = 'bold 74px Georgia, serif'; g.fillText('ГРАМОТА', W / 2, 175);
+  g.font = 'italic 34px Georgia, serif'; g.fillStyle = '#8a5a12'; g.fillText('Знаток истории Троицка', W / 2, 228);
+  g.fillStyle = '#3b2a17'; g.font = '30px Georgia, serif'; g.fillText('вручается', W / 2, 300);
+  let fs = 72; g.font = `bold ${fs}px Georgia, serif`;
+  while (g.measureText(name).width > W - 200 && fs > 30) { fs -= 4; g.font = `bold ${fs}px Georgia, serif`; }
+  g.fillText(name, W / 2, 390);
+  g.font = '28px Georgia, serif';
+  g.fillText(`за путешествие во времени по ${places.length} историческим местам города:`, W / 2, 460);
+  g.font = '24px Georgia, serif'; g.fillStyle = '#5a4630';
+  const names = places.map(p => p.title), half = Math.ceil(names.length / 2);
+  [names.slice(0, half).join(' · '), names.slice(half).join(' · ')]
+    .forEach((t, i) => g.fillText(t, W / 2, 515 + i * 40, W - 160));
+  g.fillStyle = '#3b2a17'; g.font = 'italic 26px Georgia, serif';
+  g.fillText('«Троицк сквозь время» · ' + new Date().toLocaleDateString('ru-RU'), W / 2, 700);
+  g.beginPath(); g.arc(W - 190, H - 190, 70, 0, 7); g.fillStyle = '#c8962e'; g.fill();
+  g.fillStyle = '#fff8ea'; g.font = 'bold 26px Georgia, serif'; g.fillText('1743', W - 190, H - 180);
+  const url = c.toDataURL('image/png');
+  $('pass-img').src = url; $('pass-dl').href = url; $('pass-dl').download = 'Грамота — ' + name + '.png';
+  $('pass-cert').hidden = false;
+  try { localStorage.setItem('tq-name', JSON.stringify(name)); } catch (e) {}
+});

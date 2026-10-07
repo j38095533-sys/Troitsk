@@ -14,6 +14,7 @@
 <header id="top">
   <h1>Троицк <span>сквозь время</span></h1>
   <p>Нажми на светящуюся точку</p>
+  <button id="pass-btn">🏅 0 из 0</button>
 </header>
 <button id="game-btn">🎮 Игра</button>
 
@@ -25,21 +26,45 @@
 <nav id="chips" aria-label="Места"></nav>
 
 <section id="street" hidden>
-  <div id="frames"></div>
+  <div id="frames-box">
+    <div id="frames"></div>
+    <div id="cmp" hidden>
+      <img id="cmp-a" alt=""><img id="cmp-b" alt="">
+      <div id="cmp-line"><span>⇆</span></div>
+      <div class="cmp-tag" id="cmp-la"></div><div class="cmp-tag r" id="cmp-lb"></div>
+    </div>
+  </div>
   <button id="back" aria-label="Назад к карте">‹ Карта</button>
   <div id="panel">
-    <div id="year-row"><div id="year-big"></div><button id="orig-btn" hidden>Подлинное фото</button></div>
+    <div id="year-row"><div id="year-big"></div><div class="yr-btns"><button id="cmp-btn" hidden>⇆ Было / стало</button><button id="orig-btn" hidden>Подлинное фото</button></div></div>
     <div id="place-title"></div>
     <div id="era-text"></div>
     <div id="recon"></div>
     <div id="place-intro"></div>
     <div id="era-src"></div>
   </div>
+  <div id="hint" hidden><span class="hand">👆</span> Двигай ползунок — и путешествуй во времени!</div>
   <div id="dock">
     <input id="slider" type="range" min="0" max="0" step="1" value="0" aria-label="Год">
     <div id="ticks"></div>
   </div>
 </section>
+
+<div id="pass" hidden>
+  <div class="pass-card">
+    <button id="pass-close" aria-label="Закрыть">✕</button>
+    <h2>Паспорт знатока</h2>
+    <p class="pass-sub">Открой каждое место на карте — оно отметится галочкой.</p>
+    <ul id="pass-list"></ul>
+    <p id="pass-todo"></p>
+    <div id="pass-done" hidden>
+      <p>Ты прошёл все места! 🎉 Впиши имя и получи грамоту:</p>
+      <input id="pass-name" maxlength="40" placeholder="Имя и фамилия">
+      <button id="pass-make">Получить грамоту</button>
+      <div id="pass-cert" hidden><img id="pass-img" alt="Грамота"><a id="pass-dl">Сохранить картинку</a></div>
+    </div>
+  </div>
+</div>
 
 <div id="orig" hidden>
   <img id="orig-img" alt="Подлинное архивное фото">
