@@ -114,7 +114,9 @@ function menu() {
   b1.onclick = () => studentJoin(pin); b2.onclick = teacherLogin; b3.onclick = soloStart;
   const best = store.get('tq-best', 0);
   const review = el('button', 'g-big g-review', '📖 Повторить перед игрой'); review.onclick = summaryScreen;
-  show([el('h2', 'g-title', 'Викторина «Троицк сквозь время»'),
+  const story = el('button', 'paper-btn'); story.innerHTML = '<span class="paper-k">Интерактивная история</span><span class="paper-t">📖 Режим истории</span><span class="paper-s">Листай и действуй сам: от крепости 1743 года до наших дней</span>';
+  story.onclick = () => { close(); window.openStory && window.openStory(); };
+  show([story, el('h2', 'g-title', 'Викторина «Троицк сквозь время»'),
     el('p', 'g-sub', 'Учитель создаёт игру, ученики входят по коду со своих телефонов.'), b1, b2,
     review,
     el('p', 'g-sub', 'Или потренируйся сам — 10 вопросов на время' + (best ? ` (твой рекорд: ${best})` : '') + ':'), b3]);

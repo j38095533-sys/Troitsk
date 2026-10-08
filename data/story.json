@@ -44,8 +44,8 @@
    ],
    "narration": "1743 год. Оренбургский начальник Неплюев закладывает на реке Уй крепость. Её называют в честь праздника Святой Троицы. Сначала стена деревянная, позже — земляной вал с бастионами.",
    "interaction": {
-    "type": "hold",
-    "label": "Зажми — заложи крепость",
+    "type": "drag",
+    "label": "Потяни → построй крепость",
     "effect": "Empty river bank with survey stakes and a few soldiers turns into a finished square wooden-walled fortress with a gate tower and rows of log houses inside."
    },
    "image_a": "High-angle view over the left bank of a steppe river at its confluence with a smaller river; bare ground marked out with wooden survey stakes and ropes forming a large rectangle; a few 18th-century Russian soldiers in tricorn hats and long coats with shovels and axes; a mounted officer in a cloak seen from behind pointing at the ground; a pile of fresh logs; open steppe beyond the river; crimson accent on a small banner on a pole.",
@@ -115,8 +115,8 @@
    ],
    "narration": "Караван из Бухары идёт до Троицка 52 дня — полторы тысячи километров. На верблюдах хлопок, шёлк, парча, ковры, пряности. По оценке энциклопедии, Троицкая ярмарка в лучшие годы была третьей после Макарьевской и Ирбитской.",
    "interaction": {
-    "type": "hold",
-    "label": "Зажми — веди караван",
+    "type": "drag",
+    "label": "Потяни → веди караван",
     "effect": "Empty desert-steppe horizon fills with a long camel caravan that winds from the horizon to the gate of the walled trading yard in the foreground."
    },
    "image_a": "Low camera close to the ground at the wooden gate tower of a walled trading yard in the foreground right; empty rolling dry steppe stretching to a far flat horizon under a huge sky; a single lantern on the gate; long shadows of late afternoon; heat shimmer near the horizon; mood of waiting.",
@@ -214,9 +214,10 @@
    ],
    "narration": "1784 год. Указ: за выгодное положение и торговлю крепость становится уездным городом. Город растёт: по переписи 1897 года здесь живут около двадцати трёх тысяч человек.",
    "interaction": {
-    "type": "hold",
-    "label": "Зажми — поставь печать",
-    "effect": "An unsealed decree on a desk receives a crimson wax seal; through the window behind, the walled fortress turns into a town with streets and many roofs."
+    "type": "tap",
+    "label": "Стукни печатью 3 раза",
+    "effect": "An unsealed decree on a desk receives a crimson wax seal; through the window behind, the walled fortress turns into a town with streets and many roofs.",
+    "count": 3
    },
    "image_a": "Close-up of an 18th-century writing desk: a large unrolled decree sheet covered with illegible decorative handwriting (no readable text), a quill and inkpot, a stick of crimson sealing wax and a brass seal; behind the desk a tall window showing the small walled fortress on the river; candlelight from the side.",
    "image_b": "Same camera and composition: a large crimson wax seal is now pressed onto the decree; through the window the scene has changed — the fortress walls have given way to a spreading town of streets, houses and the stone church, with a market square full of people.",
@@ -277,8 +278,8 @@
    ],
    "narration": "1911 год. Братья Яушевы открывают трёхэтажный Пассаж. Здесь телефон, грузовой лифт и электрический свет, а витрины — из итальянского стекла.",
    "interaction": {
-    "type": "hold",
-    "label": "Зажми — включи свет",
+    "type": "swipe",
+    "label": "Смахни вверх — включи свет",
     "effect": "The dim interior gallery of the arcade lights up: electric lamps glow, mirrored shop windows sparkle."
    },
    "image_a": "Interior of an early-20th-century three-storey shopping arcade seen from the ground floor looking along a wide central passage: shop fronts with large glass display windows on both sides, balconies above, unlit hanging electric lamps; early-1910s shoppers and clerks in European clothes as dim silhouettes; gloomy grey daylight from above.",
@@ -307,7 +308,7 @@
    "narration": "Железную дорогу ведут от станции Полетаево. Первый поезд приходит в Троицк в октябре 1911 года, регулярное движение начинается в 1912-м. Местная газета пишет: вчерашний медвежий угол приобщается к мировой культуре.",
    "interaction": {
     "type": "hold",
-    "label": "Зажми — дай гудок",
+    "label": "Зажми — долгий гудок",
     "effect": "An empty platform at a new station building is filled by an arriving steam locomotive in billowing steam, with a crowd waving."
    },
    "image_a": "Low three-quarter view along a new railway platform in autumn: a fresh brick station building on the right, empty rails curving away to the steppe horizon, a few people in early-1910s coats and hats waiting, bare birch trees, fallen leaves blowing; cold clear light.",
@@ -377,9 +378,10 @@
    ],
    "narration": "Великая Отечественная война. В Троицк эвакуируют заводы. 5 декабря 1941 года электромеханический завод выпускает первые радиаторы для самолётов, с 1943 года — и для танков. В городе работают эвакогоспитали.",
    "interaction": {
-    "type": "hold",
-    "label": "Зажми — запусти станки",
-    "effect": "A dark, cold improvised workshop comes alive: lamps on, machines running, workers at benches, finished radiators stacked."
+    "type": "tap",
+    "label": "Стучи — запусти станки",
+    "effect": "A dark, cold improvised workshop comes alive: lamps on, machines running, workers at benches, finished radiators stacked.",
+    "count": 8
    },
    "image_a": "Interior of a large old brick hall converted into a wartime workshop at night in winter: crates with evacuated machine tools half-unpacked, frost on tall windows, silent lathes under tarpaulins, a single bare bulb unlit, breath vapor of two workers in padded jackets standing in the dark.",
    "image_b": "Same camera and composition: lamps are on, lathes and presses are running with sparks, rows of workers including women and teenagers in padded jackets at benches, finished metal radiators stacked along the wall, a crimson banner without text hanging high.",
@@ -411,8 +413,8 @@
    ],
    "narration": "Пятиглавая Михайловская церковь стояла на главной площади с 1876 года. В 1967 году её взорвали — храм простоял 91 год. На его месте построили здание горкома, а сегодня там детская школа искусств.",
    "interaction": {
-    "type": "hold",
-    "label": "Зажми — вспомни храм",
+    "type": "rub",
+    "label": "Сотри пыль — вспомни храм",
     "effect": "Over the empty square with settling dust, a translucent crimson line-drawing of the lost five-domed church with its bell tower appears in its original place, like a memory."
    },
    "image_a": "Wide view of a central town square in the late 1960s: an empty patch of broken ground with a low pile of brick rubble and drifting dust in the center, a long arcaded one-storey trading building at the side, Soviet-era lamp posts, a few people in 1960s coats standing still looking at the empty spot; overcast sky.",
@@ -453,8 +455,8 @@
    ],
    "narration": "В девяностые храмы возвращают верующим: в 1997 году — Свято-Троицкий собор, после пожара 1974 года от его глав оставался один барабан. В 1992 году в старом училище открывается лицей. История продолжается.",
    "interaction": {
-    "type": "hold",
-    "label": "Зажми — верни купола",
+    "type": "rub",
+    "label": "Сотри пальцем — верни купола",
     "effect": "The damaged cathedral with only a bare central drum gets back its domes, crosses and bell tower, standing restored over the river."
    },
    "image_a": "View from across the river Uy toward the old stone cathedral: the building is scarred and roofless above, only one bare central drum without a dome remains, empty window openings, scaffolding on one side; the modern town skyline faint behind; quiet evening light reflected in the water.",

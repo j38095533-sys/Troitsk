@@ -68,10 +68,7 @@
       const caps = el('div', 'st-caps');
       (s.captions || []).forEach((c, k) => caps.append(el('div', 'st-cap' + (k % 2 ? ' r' : ''), esc(c))));
       stick.append(caps);
-      if (s.interaction) {
-        const hold = el('button', 'st-hold', `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/><circle class="p" cx="50" cy="50" r="46"/></svg><span>${esc(s.interaction.label || 'Зажми и держи')}</span>`);
-        stick.append(hold); bindHold(hold, frame, s);
-      }
+      if (s.interaction) makeControl(stick, frame, s);
       sec.append(stick); scroller.append(sec);
     });
     const outro = el('section', 'st-outro');
@@ -105,35 +102,93 @@
       const caps = sec.querySelectorAll('.st-cap'), n = caps.length;            // подписи по одной: появилась — сменилась следующей
       const ci = p < 0.06 ? -1 : Math.min(n - 1, Math.floor((p - 0.06) / (0.8 / Math.max(1, n))));
       caps.forEach((c, k) => c.classList.toggle('on', k === ci));
-      const hold = sec.querySelector('.st-hold'); if (hold) hold.classList.toggle('on', p > 0.35);
+      const ctl = sec.querySelector('.st-ctl'); if (ctl) ctl.classList.toggle('on', p > 0.35);
     });
     if (cur >= 0) playScene(cur);
   }
 
-  // «зажми и держи»: кадр A плавно сменяется кадром B, по завершении — звук действия и вибрация
-  function bindHold(btn, frame, s) {
-    let t0 = 0, raf2 = 0, done = false, k = 0;
+  // ---- жесты: hold (зажми), drag (потяни →), swipe (смахни вверх), tap (стучи N раз), rub (сотри пальцем) ----
+  function makeControl(stick, frame, s) {
+    const it = s.interaction, type = it.type || 'hold', label = esc(it.label || 'Зажми и держи');
+    let k = 0, done = false;
     const b = () => frame.querySelector('.st-img.b');
-    const step = () => {
-      k = Math.min(1, (performance.now() - t0) / 1600);
-      const bb = b(); if (bb) bb.style.opacity = k;
-      btn.style.setProperty('--p', k);
-      if (k >= 1) {
-        done = true; btn.classList.add('done'); btn.querySelector('span').textContent = '✓';
-        if (navigator.vibrate) navigator.vibrate([30, 40, 60]);
-        if (soundOn) { const fx = new Audio(snd(s, 'fx')); fx.volume = 0.9; fx.play().catch(() => {}); }
-        return;
-      }
-      raf2 = requestAnimationFrame(step);
+    const setK = v => { k = Math.max(0, Math.min(1, v)); const bb = b(); if (bb && type !== 'rub') bb.style.opacity = k; ctl.style.setProperty('--p', k); };
+    const finish = () => {
+      if (done) return; done = true; setK(1); ctl.classList.add('done');
+      if (navigator.vibrate) navigator.vibrate([30, 40, 60]);
+      if (soundOn) { const fx = new Audio(snd(s, 'fx')); fx.volume = 0.9; fx.play().catch(() => {}); }
     };
-    const start = ev => { ev.preventDefault(); if (done) return; t0 = performance.now() - k * 1600; cancelAnimationFrame(raf2); raf2 = requestAnimationFrame(step); };
-    const stop = () => {
-      if (done) return; cancelAnimationFrame(raf2);
-      const back = () => { k = Math.max(0, k - 0.06); const bb = b(); if (bb) bb.style.opacity = k; btn.style.setProperty('--p', k); if (k > 0 && !done) raf2 = requestAnimationFrame(back); };
-      raf2 = requestAnimationFrame(back);
-    };
-    btn.addEventListener('pointerdown', start); btn.addEventListener('pointerup', stop); btn.addEventListener('pointerleave', stop); btn.addEventListener('pointercancel', stop);
-    btn.addEventListener('contextmenu', e => e.preventDefault());
+    const rollback = () => { if (done) return; const back = () => { if (done) return; setK(k - 0.05); if (k > 0) requestAnimationFrame(back); }; requestAnimationFrame(back); };
+    let ctl;
+    if (type === 'drag' || type === 'swipe') {
+      const vert = type === 'swipe';
+      ctl = el('div', 'st-ctl st-' + type, `<div class="st-track"><i></i><b>${vert ? '⬆' : '➜'}</b></div><span>${label}</span>`);
+      const track = ctl.querySelector('.st-track');
+      let drag = false;
+      const at = ev => {
+        const r = track.getBoundingClientRect();
+        const v = vert ? (r.bottom - ev.clientY - 24) / (r.height - 48) : (ev.clientX - r.left - 24) / (r.width - 48);
+        setK(v); if (k >= 0.98) { drag = false; finish(); }
+      };
+      track.addEventListener('pointerdown', ev => { if (done) return; ev.preventDefault(); drag = true; track.setPointerCapture(ev.pointerId); at(ev); });
+      track.addEventListener('pointermove', ev => { if (drag) at(ev); });
+      const up = () => { if (drag) { drag = false; rollback(); } };
+      track.addEventListener('pointerup', up); track.addEventListener('pointercancel', up);
+    } else if (type === 'tap') {
+      const n = it.count || 3;
+      ctl = el('button', 'st-ctl st-tap', `<span class="st-tapn">${n}</span><span>${label}</span>`);
+      let hits = 0;
+      ctl.addEventListener('pointerdown', ev => {
+        ev.preventDefault(); if (done) return;
+        hits++; setK(hits / n); ctl.querySelector('.st-tapn').textContent = n - hits || '✓';
+        ctl.classList.remove('pop'); void ctl.offsetWidth; ctl.classList.add('pop');
+        if (navigator.vibrate) navigator.vibrate(12);
+        if (hits >= n) finish();
+      });
+    } else if (type === 'rub') {
+      ctl = el('button', 'st-ctl st-rubbtn', `<span>✋</span><span>${label}</span>`);
+      let canvas = null, ctx = null, rubbing = false, lastCheck = 0;
+      const start = () => {
+        if (done || canvas) return;
+        const a = frame.querySelector('.st-img.a'), bb = b();
+        canvas = el('canvas', 'st-rub'); frame.append(canvas);
+        const W = frame.clientWidth, H = frame.clientHeight; canvas.width = W; canvas.height = H;
+        ctx = canvas.getContext('2d');
+        if (a && a.naturalWidth) {                                     // рисуем кадр A «как object-fit: cover»
+          const sc = Math.max(W / a.naturalWidth, H / a.naturalHeight), w = a.naturalWidth * sc, h = a.naturalHeight * sc;
+          ctx.drawImage(a, (W - w) / 2, (H - h) / 2, w, h);
+        } else { ctx.fillStyle = '#e4ddd0'; ctx.fillRect(0, 0, W, H); }
+        if (bb) bb.style.opacity = 1;
+        ctx.globalCompositeOperation = 'destination-out'; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(46, W * 0.13);
+        stick.classList.add('rubbing'); ctl.querySelector('span:last-child').textContent = 'Води пальцем по картинке';
+        let prev = null;
+        const pt = ev => { const r = canvas.getBoundingClientRect(); return [(ev.clientX - r.left) * W / r.width, (ev.clientY - r.top) * H / r.height]; };
+        canvas.addEventListener('pointerdown', ev => { ev.preventDefault(); rubbing = true; canvas.setPointerCapture(ev.pointerId); prev = pt(ev); });
+        canvas.addEventListener('pointermove', ev => {
+          if (!rubbing) return; const p = pt(ev);
+          ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(p[0], p[1]); ctx.stroke(); prev = p;
+          if (performance.now() - lastCheck > 250) { lastCheck = performance.now(); measure(); }
+        });
+        const end = () => { rubbing = false; measure(); };
+        canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+      };
+      const measure = () => {                                          // доля стёртого (по редкой сетке точек)
+        const d = ctx.getImageData(0, 0, canvas.width, canvas.height).data; let clear = 0, tot = 0;
+        for (let i = 3; i < d.length; i += 4 * 97) { tot++; if (d[i] < 40) clear++; }
+        setK(clear / tot / 0.55);
+        if (clear / tot > 0.55) { canvas.style.transition = 'opacity .8s'; canvas.style.opacity = 0; stick.classList.remove('rubbing'); finish(); }
+      };
+      ctl.addEventListener('pointerdown', ev => { ev.preventDefault(); start(); });
+    } else {                                                            // hold
+      ctl = el('button', 'st-ctl st-hold', `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/><circle class="p" cx="50" cy="50" r="46"/></svg><span>${label}</span>`);
+      let t0 = 0, raf2 = 0;
+      const step = () => { setK((performance.now() - t0) / 1600); if (k >= 1) return finish(); raf2 = requestAnimationFrame(step); };
+      ctl.addEventListener('pointerdown', ev => { ev.preventDefault(); if (done) return; t0 = performance.now() - k * 1600; cancelAnimationFrame(raf2); raf2 = requestAnimationFrame(step); });
+      const stop = () => { cancelAnimationFrame(raf2); rollback(); };
+      ctl.addEventListener('pointerup', stop); ctl.addEventListener('pointerleave', stop); ctl.addEventListener('pointercancel', stop);
+    }
+    ctl.addEventListener('contextmenu', e => e.preventDefault());
+    stick.append(ctl);
   }
 
   async function open() {
@@ -147,7 +202,7 @@
     root.hidden = true; document.body.classList.remove('in-story');
     amb.forEach(a => fade(a, 0, 300)); voice.pause(); active = -1;
   }
-  document.getElementById('story-btn').addEventListener('click', open);
+  window.openStory = open;
   document.getElementById('st-close').addEventListener('click', close);
   document.getElementById('st-sound').addEventListener('click', () => setSound(!soundOn));
 })();
