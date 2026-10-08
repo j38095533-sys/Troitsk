@@ -19,7 +19,7 @@ const loadBank = () => bank ? Promise.resolve(bank) : fetch('data/quiz.json').th
 
 const screen = $('game');
 function show(html) { screen.hidden = false; document.body.classList.add('in-game'); const box = $('game-box'); box.innerHTML = ''; box.append(...[].concat(html)); }
-function close() { clearInterval(beatId); clearInterval(watchId); screen.hidden = true; document.body.classList.remove('in-game'); if (client) { try { client.end(true); } catch (e) {} client = null; } clearInterval(timerId); }
+function close() { document.querySelectorAll('.duo').forEach(n => n.remove()); clearInterval(beatId); clearInterval(watchId); screen.hidden = true; document.body.classList.remove('in-game'); if (client) { try { client.end(true); } catch (e) {} client = null; } clearInterval(timerId); }
 $('game-close').addEventListener('click', () => { if (role === 'host' && phase !== 'end' && phase !== 'menu' && !confirm('Закончить игру?')) return; if (role === 'host') publishState({ phase: 'end', scores: board() }); close(); });
 
 // ---------- связь: сразу все каналы ----------
@@ -109,13 +109,15 @@ function menu() {
   const pin = new URLSearchParams(location.search).get('pin');
   const b1 = el('button', 'g-big g-student', 'Я ученик'), b2 = el('button', 'g-big g-teacher', 'Я учитель');
   const b3 = el('button', 'g-big g-solo', 'Играть одному');
-  b1.onclick = () => studentJoin(pin); b2.onclick = teacherLogin; b3.onclick = soloStart;
+  const b4 = el('button', 'g-big g-duo', '👥 Вдвоём на одном телефоне');
+  b1.onclick = () => studentJoin(pin); b2.onclick = teacherLogin; b3.onclick = soloStart; b4.onclick = duoStart;
   const best = store.get('tq-best', 0);
   const review = el('button', 'g-big g-review', '📖 Повторить перед игрой'); review.onclick = summaryScreen;
   show([el('h2', 'g-title', 'Викторина «Троицк сквозь время»'),
     el('p', 'g-sub', 'Учитель создаёт игру, ученики входят по коду со своих телефонов.'), b1, b2,
     review,
-    el('p', 'g-sub', 'Или потренируйся сам — 10 вопросов на время' + (best ? ` (твой рекорд: ${best})` : '') + ':'), b3]);
+    el('p', 'g-sub', 'Или потренируйся сам — 10 вопросов на время' + (best ? ` (твой рекорд: ${best})` : '') + ':'), b3,
+    el('p', 'g-sub', 'Нет интернета или телефона у друга? Играйте вдвоём на одном — без интернета:'), b4]);
   if (pin) studentJoin(pin);
 }
 window.openGame = menu;
@@ -170,12 +172,13 @@ function startWatchdog() {
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && role === 'student') resync(false); });
 
-let timerId = null;
+let timerId = null, preloaded = false;
 function onState(s) {
   lastState = s;
   const key = s.phase + ':' + (s.qi ?? '') + (s.phase === 'lobby' ? ':' + s.players : '');
   if (key === rendered) return;                    // повтор от учителя — экран уже актуален
   rendered = key;
+  if (s.phase === 'lobby' && s.pre && !preloaded) { preloaded = true; s.pre.forEach(u => { const i = new Image(); i.src = u; }); }
   if (s.phase === 'lobby') waitScreen('Ты в игре, ' + me.name + '!', 'Ждём остальных. Игроков: ' + (s.players || 0));
   else if (s.phase === 'question') studentQuestion(s);
   else if (s.phase === 'reveal') studentReveal(s);
@@ -183,14 +186,14 @@ function onState(s) {
 }
 function studentQuestion(s) {
   if (answeredQ === s.qi) return;                      // уже ответил на этот вопрос
-  const got = Date.now(), dur = s.dur * 1000 - (s.elapsed || 0);
+  const got = Date.now(), dur = Math.max(4000, s.dur * 1000 - (s.elapsed || 0));
   const bar = el('div', 'g-timer'); const fill = el('i'); bar.append(fill);
   const btns = el('div', 'g-answers');
   s.options.forEach((o, i) => {
     const b = el('button', 'g-ans g-c' + i); b.append(el('span', 'g-shape', SHAPES[i]), el('span', '', o));
     b.onclick = () => {
       answeredQ = s.qi;
-      client.publish(ROOT + me.pin + '/ans', JSON.stringify({ id: me.id, qi: s.qi, c: i, ms: Date.now() - got + (s.elapsed || 0) }), { qos: 1 });
+      client.publish(ROOT + me.pin + '/ans', JSON.stringify({ id: me.id, name: me.name, qi: s.qi, c: i, ms: Date.now() - got + (s.elapsed || 0) }), { qos: 1 });
       waitScreen('Ответ принят!', 'Ждём остальных…');
     };
     btns.append(b);
@@ -315,16 +318,19 @@ async function hostGame(qs, dur) {
     let d; try { d = JSON.parse(m.toString()); } catch (e) { return; }
     if (t.endsWith('/join') && d.id && d.name) {
       if (!H.players.has(d.id)) H.players.set(d.id, { id: d.id, name: String(d.name).slice(0, 18), score: 0, last: null });
-      if (phase === 'lobby') { lobby(); publishState({ phase: 'lobby', players: H.players.size }); }
+      if (phase === 'lobby') { lobby(); publishState({ phase: 'lobby', players: H.players.size, pre: H.pre }); }
       else republish();
     }
+    if (t.endsWith('/ans') && d.id && !H.players.has(d.id) && d.name)          // вход ученика потерялся в сети — добавляем по ответу
+      H.players.set(d.id, { id: d.id, name: String(d.name).slice(0, 18), score: 0, last: null });
     if (t.endsWith('/ans') && phase === 'question' && d.qi === H.qi && H.players.has(d.id) && !H.answers.has(d.id)) {
       H.answers.set(d.id, { c: d.c, ms: Math.min(+d.ms || 0, H.dur * 1000) });
       $('g-anscount') && ($('g-anscount').textContent = `Ответили: ${H.answers.size} из ${H.players.size}`);
       if (H.answers.size >= H.players.size) reveal();
     }
   });
-  phase = 'lobby'; publishState({ phase: 'lobby', players: 0 }); lobby();
+  H.pre = [...new Set(qs.map(q => q.img).filter(Boolean))];
+  phase = 'lobby'; publishState({ phase: 'lobby', players: 0, pre: H.pre }); lobby();
 }
 function republish() { if (phase === 'question') sendQuestion(true); else if (phase === 'reveal') publishState(H.revealState); }
 
@@ -468,6 +474,100 @@ function soloEnd() {
     el('div', 'g-result g-ok', solo.score + ' очков'),
     el('p', 'g-sub', `Правильных ответов: ${solo.right} из ${solo.qs.length}` + (rec ? ' · новый рекорд! 🎉' : ` · рекорд: ${best}`)),
     again, menuB]);
+}
+
+// ---------- вдвоём на одном телефоне ----------
+// Телефон лежит между игроками: экран разделён пополам, верхняя половина повёрнута к сидящему напротив.
+// Работает без интернета (вопросы уже в памяти телефона).
+let duo = null;
+async function duoStart() {
+  role = 'duo'; phase = 'duo';
+  if (window.stat) window.stat('game', { kind: 'duo' });
+  const b = await loadBank();
+  const qs = shuffle(b).slice(0, 10).map(q => { const o = shuffle([0, 1, 2, 3]); return { ...q, options: o.map(k => q.options[k]), a: o.indexOf(q.a) }; });
+  document.querySelectorAll('.duo').forEach(n => n.remove());
+  const root = el('div', 'duo');
+  const halves = [el('div', 'duo-half top'), el('div', 'duo-half bottom')];
+  const mid = el('div', 'duo-mid'); const fill = el('i'); mid.append(fill);
+  root.append(halves[0], mid, halves[1]);
+  screen.append(root);
+  duo = { qs, i: -1, score: [0, 0], ans: [null, null], t0: 0, halves, fill, root };
+  // стартовый экран: каждый жмёт «Готов»
+  const ready = [false, false];
+  halves.forEach((h, p) => {
+    h.innerHTML = '';
+    const btn = el('button', 'g-big duo-ready p' + p, 'Готов!');
+    h.append(el('div', 'duo-name p' + p, 'Игрок ' + (p + 1)), el('p', 'g-sub', '10 вопросов. Кто ответит верно и быстрее — получит больше очков.'), btn);
+    btn.addEventListener('pointerdown', () => {
+      ready[p] = true; btn.textContent = 'Ждём соперника…'; btn.disabled = true;
+      if (ready[0] && ready[1]) setTimeout(duoNext, 500);
+    });
+  });
+}
+function duoNext() {
+  duo.i++;
+  if (duo.i >= duo.qs.length) return duoEnd();
+  const q = duo.qs[duo.i], DUR = 15000;
+  duo.ans = [null, null]; duo.t0 = Date.now(); duo.first = null;
+  duo.halves.forEach((h, p) => {
+    h.innerHTML = '';
+    const head = el('div', 'duo-head'); head.append(el('span', 'duo-name p' + p, 'Игрок ' + (p + 1)), el('span', 'duo-score', duo.score[p] + ' очков'));
+    const parts = [head, el('div', 'g-qnum', `Вопрос ${duo.i + 1} из ${duo.qs.length}`), el('div', 'duo-q', q.q)];
+    if (q.img) { const im = el('img', 'duo-img'); im.src = q.img; parts.push(im); }
+    const grid = el('div', 'g-answers duo-answers');
+    q.options.forEach((o, k) => {
+      const btn = el('button', 'g-ans g-c' + k); btn.append(el('span', 'g-shape', SHAPES[k]), el('span', '', o));
+      btn.addEventListener('pointerdown', ev => { ev.preventDefault(); duoAnswer(p, k); });
+      grid.append(btn);
+    });
+    parts.push(grid);
+    h.append(...parts);
+  });
+  clearInterval(timerId);
+  timerId = setInterval(() => {
+    const left = Math.max(0, DUR - (Date.now() - duo.t0));
+    duo.fill.style.width = (100 * left / DUR) + '%';
+    if (!left) duoReveal();
+  }, 100);
+}
+function duoAnswer(p, k) {
+  if (duo.ans[p] !== null || phase !== 'duo') return;
+  const q = duo.qs[duo.i], ms = Date.now() - duo.t0;
+  duo.ans[p] = { k, ms };
+  if (k === q.a && duo.first === null) duo.first = p;
+  if (navigator.vibrate) navigator.vibrate(15);
+  const h = duo.halves[p];
+  h.querySelectorAll('.g-ans').forEach((b, i) => { b.disabled = true; b.classList.toggle('duo-picked', i === k); b.classList.toggle('duo-dim', i !== k); });
+  if (duo.ans[0] !== null && duo.ans[1] !== null) setTimeout(duoReveal, 300);
+}
+function duoReveal() {
+  if (phase !== 'duo' || duo.revealed === duo.i) return;
+  duo.revealed = duo.i; clearInterval(timerId);
+  const q = duo.qs[duo.i];
+  duo.halves.forEach((h, p) => {
+    const a = duo.ans[p], ok = a && a.k === q.a;
+    let pts = 0;
+    if (ok) pts = Math.round(500 + 500 * (1 - Math.min(a.ms, 15000) / 15000)) + (duo.first === p ? 200 : 0);
+    duo.score[p] += pts;
+    h.querySelectorAll('.g-ans').forEach((b, i) => { b.disabled = true; b.classList.toggle('duo-right', i === q.a); b.classList.toggle('duo-dim', i !== q.a); });
+    const res = el('div', 'duo-res ' + (ok ? 'g-ok' : 'g-bad'), a ? (ok ? `Верно! +${pts}` + (duo.first === p ? ' ⚡ первый' : '') : 'Неверно') : 'Время вышло');
+    h.querySelector('.duo-q').after(res);
+    h.querySelector('.duo-score').textContent = duo.score[p] + ' очков';
+  });
+  setTimeout(() => { if (phase === 'duo') duoNext(); }, 2600);
+}
+function duoEnd() {
+  clearInterval(timerId);
+  duo.halves.forEach((h, p) => {
+    h.innerHTML = '';
+    const me = duo.score[p], other = duo.score[1 - p];
+    const title = me === other ? 'Ничья!' : me > other ? 'Победа! 🏆' : 'Почти! 2 место';
+    const again = el('button', 'g-big g-solo', 'Ещё раз'); again.addEventListener('pointerdown', () => duoStart());
+    const quit = el('button', 'g-link', 'Выйти'); quit.addEventListener('pointerdown', () => { duo.root.remove(); menu(); });
+    h.append(el('div', 'duo-name p' + p, 'Игрок ' + (p + 1)), el('div', 'g-result ' + (me >= other ? 'g-ok' : 'g-bad'), title),
+      el('div', 'g-score', `Твои очки: ${me} · соперник: ${other}`), again, quit);
+  });
+  duo.fill.style.width = '0%';
 }
 
 // ссылка вида ?pin=123456 сразу открывает вход ученика

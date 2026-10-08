@@ -240,3 +240,22 @@ body.caravan-on #chips { display: none; }
 
 #net-status { position: fixed; left: 0; right: 0; bottom: calc(6px + env(safe-area-inset-bottom)); text-align: center; font-size: 11px; color: var(--muted); pointer-events: none; }
 #net-status.bad { color: #ff8a80; }
+
+/* ---------- вдвоём на одном телефоне ---------- */
+.g-duo { background: #c2410c; }
+.duo { position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; background: var(--bg); }
+.duo-half { flex: 1; min-height: 0; overflow: hidden; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; justify-content: center; text-align: center; }
+.duo-half.top { transform: rotate(180deg); background: #16202b; }
+.duo-half.bottom { background: #2a1714; }
+.duo-mid { height: 6px; background: #ffffff1a; flex: none; }
+.duo-mid i { display: block; height: 100%; width: 100%; background: var(--accent); transition: width .1s linear; }
+.duo-head { display: flex; justify-content: space-between; align-items: center; }
+.duo-name { font-weight: 800; font-size: 15px; } .duo-name.p0 { color: #6fb3ff; } .duo-name.p1 { color: #ff8a65; }
+.duo-score { font-weight: 700; color: var(--muted); }
+.duo-q { font: 700 17px/1.25 Georgia, serif; }
+.duo-img { max-height: 13vh; max-width: 100%; object-fit: contain; border-radius: 8px; align-self: center; }
+.duo-answers { gap: 6px; } .duo-answers .g-ans { min-height: 54px; font-size: 14px; padding: 6px; }
+.duo-answers .g-shape { font-size: 15px; }
+.duo-picked { outline: 4px solid #fff; } .duo-dim { opacity: .35; } .duo-right { outline: 4px solid #8fe39a; opacity: 1 !important; }
+.duo-res { font-weight: 800; padding: 6px; border-radius: 10px; }
+.duo-ready.p0 { background: #2f80ed; } .duo-ready.p1 { background: #c2410c; }
