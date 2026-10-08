@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Проверка связи для игры</title>
+<style>
+  :root { --bg: #14110f; --ink: #f3e9dc; --muted: #b9a993; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.4 system-ui, sans-serif; padding: 16px; }
+  h1 { font: 700 22px Georgia, serif; margin: 0 0 6px; }
+  p { color: var(--muted); margin: 0 0 14px; font-size: 14px; }
+  li { list-style: none; padding: 10px 12px; margin: 6px 0; border-radius: 10px; background: #ffffff10; display: flex; justify-content: space-between; gap: 10px; }
+  ul { padding: 0; }
+  .ok { color: #8fe39a; } .bad { color: #ff8a80; } .wait { color: var(--muted); }
+  #net { font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>Проверка связи для игры</h1>
+<p>Открой на телефоне в той сети, где играет класс (школьный Wi-Fi или мобильный интернет). Через 15 секунд сделай скриншот.</p>
+<ul id="list"></ul>
+<div id="net"></div>
+<script src="lib/mqtt.min.js"></script>
+<script src="lib/peerjs.min.js"></script>
+<script>
+const list = document.getElementById('list');
+const row = name => { const li = document.createElement('li'); li.innerHTML = `<span>${name}</span><b class="wait">проверяю…</b>`; list.appendChild(li); return li.querySelector('b'); };
+const set = (b, ok, t) => { b.className = ok ? 'ok' : 'bad'; b.textContent = (ok ? '✓ ' : '✗ ') + t; };
+const T0 = () => performance.now();
+
+// MQTT-брокеры: подключение + сообщение «туда и обратно»
+[['Сервер 1 (HiveMQ :8884)', 'wss://broker.hivemq.com:8884/mqtt'], ['Сервер 2 (EMQX :8084)', 'wss://broker.emqx.io:8084/mqtt'],
+ ['Сервер 3 (Mosquitto :8081)', 'wss://test.mosquitto.org:8081/mqtt']].forEach(([name, url]) => {
+  const b = row(name), t0 = T0(), topic = 'troitsk-quiz/check/' + Math.random().toString(36).slice(2);
+  let stage = 'нет подключения';
+  const c = mqtt.connect(url, { connectTimeout: 8000, reconnectPeriod: 0 });
+  c.on('connect', () => { stage = 'подключился, но сообщения не доходят'; c.subscribe(topic, () => c.publish(topic, 'ping')); });
+  c.on('message', () => { set(b, true, Math.round(T0() - t0) + ' мс'); c.end(true); stage = null; });
+  c.on('error', () => {});
+  setTimeout(() => { if (stage) { set(b, false, stage); c.end(true); } }, 12000);
+});
+
+// ntfy.sh (обычный HTTPS 443)
+(() => {
+  const b = row('Запасной (ntfy.sh :443)'), t0 = T0(), topic = 'tq_check_' + Math.random().toString(36).slice(2);
+  let done = false;
+  try {
+    const ws = new WebSocket('wss://ntfy.sh/' + topic + '/ws');
+    ws.onopen = () => fetch('https://ntfy.sh/' + topic, { method: 'POST', body: 'ping' }).catch(() => {});
+    ws.onmessage = e => { try { if (JSON.parse(e.data).event === 'message' && !done) { done = true; set(b, true, Math.round(T0() - t0) + ' мс'); ws.close(); } } catch (er) {} };
+  } catch (e) {}
+  setTimeout(() => { if (!done) set(b, false, 'не работает'); }, 12000);
+})();
+
+// PeerJS (знакомство для прямой связи телефонов)
+(() => {
+  const b = row('Прямая связь (PeerJS)'), t0 = T0();
+  let done = false;
+  try {
+    const p = new Peer();
+    p.on('open', () => { if (!done) { done = true; set(b, true, Math.round(T0() - t0) + ' мс'); p.destroy(); } });
+    p.on('error', e => { if (!done) { done = true; set(b, false, e.type || 'ошибка'); } });
+  } catch (e) { set(b, false, 'ошибка'); done = true; }
+  setTimeout(() => { if (!done) set(b, false, 'не работает'); }, 12000);
+})();
+
+// GitHub (сам сайт) — для сравнения
+(() => {
+  const b = row('Сайт (GitHub)'), t0 = T0();
+  fetch('data/places.json?' + Date.now(), { cache: 'no-store' }).then(r => set(b, r.ok, Math.round(T0() - t0) + ' мс')).catch(() => set(b, false, 'не работает'));
+})();
+const c = navigator.connection;
+document.getElementById('net').textContent = (c ? 'Сеть: ' + (c.effectiveType || '') + ' · ' : '') + new Date().toLocaleString('ru-RU');
+</script>
+</body>
+</html>
