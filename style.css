@@ -267,3 +267,21 @@ body.caravan-on #chips { display: none; }
 .g-answers .g-ans:disabled { opacity: .55; }
 
 #copy { font-size: 11px; color: var(--muted); opacity: .8; margin-top: 14px; padding-top: 10px; border-top: 1px solid #ffffff12; line-height: 1.45; }
+
+/* ---------- результаты игры ---------- */
+.g-results { display: flex; flex-direction: column; gap: 10px; background: #ffffff0a; border-radius: 14px; padding: 12px; }
+.g-table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
+.g-table th, .g-table td { padding: 7px 8px; border-bottom: 1px solid #ffffff1a; }
+.g-table th { color: var(--muted); font-weight: 600; font-size: 12px; }
+.g-table td:nth-child(3), .g-table td:nth-child(4) { white-space: nowrap; }
+.g-histrow { text-align: left; background: #ffffff0d; color: var(--ink); border: 1px solid #ffffff1f; border-radius: 10px; padding: 12px; font-size: 14px; }
+
+/* ---------- сообщить об ошибке ---------- */
+#report-btn { margin-top: 12px; background: transparent; color: var(--muted); border: 1px solid #ffffff26; border-radius: 999px; padding: 8px 14px; font-size: 13px; }
+#report { position: fixed; inset: 0; z-index: 16; background: #000b; display: grid; place-items: center; padding: 16px; }
+#report[hidden] { display: none; }
+#report-close { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid #ffffff30; background: #0006; color: var(--ink); }
+#report textarea, #report input { width: 100%; font: 15px/1.4 system-ui, sans-serif; padding: 10px 12px; border-radius: 10px; border: 1px solid #ffffff30; background: #0005; color: var(--ink); margin-top: 8px; }
+#report-send { width: 100%; margin-top: 10px; background: var(--accent); color: #1a1208; border: 0; border-radius: 12px; padding: 13px; font-size: 16px; font-weight: 800; }
+#report-send:disabled { opacity: .5; }
+#report-status { font-size: 14px; color: var(--muted); min-height: 18px; }

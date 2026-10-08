@@ -365,3 +365,20 @@ $('voice-btn').addEventListener('click', () => {
   listening = true; playVoice();
 });
 voice.addEventListener('ended', () => { vbtn('↻ Ещё раз'); voice.currentTime = 0; });
+
+// ---- «Сообщить об ошибке» ----
+$('report-btn').addEventListener('click', () => {
+  const where = curPlace ? `${curPlace.title}${shown ? ' · ' + (shown.label || shown.year) : ''}` : 'Сайт';
+  $('report-where').textContent = 'Место: ' + where + '. Сообщение получит автор сайта.';
+  $('report-status').textContent = ''; $('report-send').disabled = false; $('report').hidden = false;
+});
+$('report-close').addEventListener('click', () => { $('report').hidden = true; });
+$('report-send').addEventListener('click', async () => {
+  const text = $('report-text').value.trim();
+  if (text.length < 3) { $('report-status').textContent = 'Напишите, что не так.'; return; }
+  $('report-send').disabled = true; $('report-status').textContent = 'Отправляю…';
+  const ok = window.reportError && await window.reportError({ place: curPlace && curPlace.id, placeTitle: curPlace && curPlace.title,
+    year: shown && shown.year, label: shown && (shown.label || shown.year), text, contact: $('report-contact').value.trim() });
+  if (ok) { $('report-status').textContent = 'Спасибо! Сообщение отправлено автору.'; $('report-text').value = ''; setTimeout(() => { $('report').hidden = true; }, 1800); }
+  else { $('report-status').textContent = 'Не получилось отправить — проверьте интернет и попробуйте ещё раз.'; $('report-send').disabled = false; }
+});

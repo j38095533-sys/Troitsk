@@ -10,7 +10,7 @@
 <meta name="tsv-signature" content="TSV-OLEG-2026-aef4bc14a4b0">
 <!-- «Троицк сквозь время» © 2026 Олег Бурылов. Подпись: TSV-OLEG-2026-aef4bc14a4b0 -->
 <link rel="stylesheet" href="lib/maplibre-gl.css">
-<link rel="stylesheet" href="style.css?v=15">
+<link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
 <div id="map"></div>
@@ -48,6 +48,7 @@
     <div id="place-intro"></div>
     <div id="place-sum" hidden><h3>Главное о месте</h3><ul></ul></div>
     <div id="era-src"></div>
+    <button id="report-btn">⚑ Нашли ошибку? Сообщите автору</button>
     <div id="copy">© 2026 Олег Бурылов · «Троицк сквозь время». Реконструкции, тексты, карта и код — авторская работа; копирование без разрешения автора запрещено.</div>
   </div>
   <div id="hint" hidden><span class="hand">👆</span> Двигай ползунок — и путешествуй во времени!</div>
@@ -70,6 +71,18 @@
 
 <section id="caravan" hidden></section>
 
+<div id="report" hidden>
+  <div class="pass-card">
+    <button id="report-close" aria-label="Закрыть">✕</button>
+    <h2>Сообщить об ошибке</h2>
+    <p class="pass-sub" id="report-where"></p>
+    <textarea id="report-text" maxlength="1000" rows="5" placeholder="Что не так? Например: «в 1911 году здание выглядело иначе» или «неверная дата»"></textarea>
+    <input id="report-contact" maxlength="80" placeholder="Как с вами связаться (необязательно)">
+    <button id="report-send">Отправить</button>
+    <p id="report-status"></p>
+  </div>
+</div>
+
 <div id="orig" hidden>
   <img id="orig-img" alt="Подлинное архивное фото">
   <div id="orig-credit"></div>
@@ -79,11 +92,11 @@
 <script src="lib/maplibre-gl.js"></script>
 <script src="lib/pmtiles.js"></script>
 <script src="lib/basemaps.js"></script>
-<script src="app.js?v=15"></script>
+<script src="app.js?v=16"></script>
 <script src="lib/mqtt.min.js" defer></script>
 <script src="lib/qrcode.js" defer></script>
-<script src="game.js?v=15" defer></script>
-<script src="caravan.js?v=15" defer></script>
-<script src="stats.js?v=15" defer></script>
+<script src="game.js?v=16" defer></script>
+<script src="caravan.js?v=16" defer></script>
+<script src="stats.js?v=16" defer></script>
 </body>
 </html>

@@ -300,7 +300,8 @@ async function teacherSetup() {
     hostGame(qs, +tSel.value, waitIn.checked);
   };
   const addOwn = el('button', 'g-link', '+ Добавить свой вопрос'); addOwn.onclick = ownEditor;
-  show([el('h2', 'g-title', 'Новая игра'), el('p', 'g-sub', 'Вопросы по местам:'), chips, nSel, tSel, waitBox, info, go, addOwn]);
+  const histB = el('button', 'g-link', '📋 Прошлые игры и результаты'); histB.onclick = historyScreen;
+  show([el('h2', 'g-title', 'Новая игра'), el('p', 'g-sub', 'Вопросы по местам:'), chips, nSel, tSel, waitBox, info, go, addOwn, histB]);
 }
 function ownEditor() {
   const own = store.get('tq-own', []);
@@ -426,10 +427,11 @@ function sendQuestion() {
 function reveal() {
   if (phase !== 'question') return; phase = 'reveal'; clearInterval(timerId); clearTimeout(H.waitTimer);
   const q = H.qs[H.qi], counts = [0, 0, 0, 0];
-  H.players.forEach(p => { p.last = { ok: false, pts: 0 }; });
+  H.players.forEach(p => { p.last = { ok: false, pts: 0 }; (p.marks = p.marks || [])[H.qi] = '—'; });
   H.answers.forEach((a, id) => {
     counts[a.c] = (counts[a.c] || 0) + 1;
     const p = H.players.get(id); if (!p) return;
+    p.marks[H.qi] = a.c === q.a ? '+' : '−';
     if (a.c === q.a) { const pts = Math.round(500 + 500 * (1 - a.ms / (H.dur * 1000))); p.score += pts; p.last = { ok: true, pts }; }
   });
   const scores = board().map(p => ({ id: p.id, name: p.name, score: p.score, last: p.last }));
@@ -449,10 +451,66 @@ function finish() {
   phase = 'end'; const sc = board().map(p => ({ id: p.id, name: p.name, score: p.score }));
   publishState({ phase: 'end', scores: sc });
   const again = el('button', 'g-big g-teacher', 'Новая игра'); again.onclick = () => { publishState({ phase: 'end', scores: sc }); client.end(true); client = null; teacherSetup(); };
-  show([el('h2', 'g-title', 'Итоги игры'), podium(sc), again]);
+  const game = saveGame();
+  show([el('h2', 'g-title', 'Итоги игры'), podium(sc), resultsView(game), again]);
   // убрать сохранённое состояние с сервера через минуту
   setTimeout(() => { if (client && H) client.publish(ROOT + H.pin + '/state', '', { qos: 1, retain: true }); }, 60000);
 }
+// ---- результаты игры для учителя ----
+function saveGame() {
+  const n = H.qi >= H.qs.length ? H.qs.length : H.qi + 1;
+  const rows = board().map((p, i) => ({ place: i + 1, name: p.name, score: p.score,
+    right: (p.marks || []).filter(m => m === '+').length, marks: Array.from({ length: n }, (_, k) => (p.marks || [])[k] || '—') }));
+  const game = { date: new Date().toISOString(), pin: H.pin, total: n, questions: H.qs.slice(0, n).map(q => q.q), rows };
+  const hist = store.get('tq-history', []); hist.unshift(game); store.set('tq-history', hist.slice(0, 30));
+  return game;
+}
+const gameDate = g => new Date(g.date).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+function resultsView(g) {
+  const box = el('div', 'g-results');
+  const t = el('table', 'g-table');
+  const head = el('tr'); ['№', 'Имя', 'Очки', 'Верно'].forEach(h => head.append(el('th', '', h))); t.append(head);
+  g.rows.forEach(r => { const tr = el('tr'); [r.place, r.name, r.score, `${r.right} из ${g.total}`].forEach(v => tr.append(el('td', '', String(v)))); t.append(tr); });
+  const csv = el('button', 'g-big g-student', '📥 Скачать таблицу (Excel)'); csv.onclick = () => downloadCsv(g);
+  const pr = el('button', 'g-link', '🖨 Распечатать'); pr.onclick = () => printResults(g);
+  box.append(el('h3', 'g-sub', `Результаты · ${gameDate(g)} · ${g.rows.length} учеников`), t, csv, pr);
+  return box;
+}
+function downloadCsv(g) {
+  const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const lines = [['Место', 'Имя', 'Очки', 'Верных ответов', ...g.questions.map((_, i) => 'В' + (i + 1))].map(q).join(';')];
+  g.rows.forEach(r => lines.push([r.place, r.name, r.score, r.right, ...r.marks].map(q).join(';')));
+  lines.push('', q('Вопросы:'));
+  g.questions.forEach((t, i) => lines.push([q('В' + (i + 1)), q(t)].join(';')));
+  const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });   // BOM — чтобы Excel понял кириллицу
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `Викторина Троицк ${gameDate(g).replace(/[:/,]/g, '-')}.csv`; document.body.append(a); a.click(); a.remove();
+}
+function printResults(g) {
+  const w = window.open('', '_blank'); if (!w) return;
+  const esc = v => String(v).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  w.document.write(`<!doctype html><meta charset="utf-8"><title>Результаты викторины</title>
+    <style>body{font:14px Arial,sans-serif;margin:24px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:6px 8px;text-align:left}th{background:#eee}</style>
+    <h2>Викторина «Троицк сквозь время»</h2><p>${gameDate(g)} · вопросов: ${g.total} · учеников: ${g.rows.length}</p>
+    <table><tr><th>№</th><th>Имя</th><th>Очки</th><th>Верно</th>${g.questions.map((_, i) => `<th>В${i + 1}</th>`).join('')}</tr>
+    ${g.rows.map(r => `<tr><td>${r.place}</td><td>${esc(r.name)}</td><td>${r.score}</td><td>${r.right} из ${g.total}</td>${r.marks.map(m => `<td>${m}</td>`).join('')}</tr>`).join('')}</table>
+    <h3>Вопросы</h3><ol>${g.questions.map(t => `<li>${esc(t)}</li>`).join('')}</ol>
+    <p style="color:#777">+ верно · − неверно · — не ответил</p><script>print()<\/script>`);
+  w.document.close();
+}
+function historyScreen() {
+  const hist = store.get('tq-history', []);
+  const back = el('button', 'g-link', '‹ Назад'); back.onclick = teacherSetup;
+  const parts = [el('h2', 'g-title', 'Прошлые игры'), el('p', 'g-sub', 'Хранятся на этом устройстве (последние 30).')];
+  if (!hist.length) parts.push(el('p', 'g-sub', 'Пока нет сыгранных игр.'));
+  hist.forEach(g => {
+    const b = el('button', 'g-histrow', `${gameDate(g)} · ${g.rows.length} учеников · ${g.total} вопросов`);
+    b.onclick = () => { const v = el('button', 'g-link', '‹ К списку игр'); v.onclick = historyScreen; show([el('h2', 'g-title', 'Итоги игры'), resultsView(g), v]); };
+    parts.push(b);
+  });
+  parts.push(back); show(parts);
+}
+
 function podium(sc) {
   const p = el('div', 'g-podium');
   [1, 0, 2].forEach(i => { if (!sc[i]) return; const c = el('div', 'g-pod g-pod' + (i + 1));

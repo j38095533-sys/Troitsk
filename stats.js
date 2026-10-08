@@ -7,6 +7,23 @@
   const BROKERS = ['wss://broker.hivemq.com:8884/mqtt', 'wss://broker.emqx.io:8084/mqtt'];
   const ROOT = 'troitsk-stats/v1/';
   const KEY = 'troitsk-stats';
+  // «Сообщить об ошибке»: работает всегда (и в тестах), сообщение лежит на брокерах, пока автор не отметит его решённым
+  let repClients = null;
+  window.reportError = info => new Promise(resolve => {
+    const rid = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const msg = JSON.stringify({ rid, t: Date.now(), ...info });
+    if (!window.mqtt) return resolve(false);
+    if (!repClients) repClients = BROKERS.map(url => {
+      const c = mqtt.connect(url, { connectTimeout: 8000, reconnectPeriod: 4000, clientId: 'tr_' + Math.random().toString(16).slice(2, 10) });
+      c.on('error', () => {}); return c;
+    });
+    let ok = false, left = repClients.length;
+    repClients.forEach(c => {
+      const go = () => c.publish(ROOT + 'report/' + rid, msg, { qos: 1, retain: true }, err => { if (!err) ok = true; if (--left === 0) resolve(ok); });
+      if (c.connected) go(); else c.once('connect', go);
+    });
+    setTimeout(() => resolve(ok), 9000);
+  });
   if (location.hostname === 'localhost' || location.search.includes('debug')) return;   // свои тесты не считаем
   let S;
   try { S = JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { S = null; }
