@@ -259,3 +259,7 @@ body.caravan-on #chips { display: none; }
 .duo-picked { outline: 4px solid #fff; } .duo-dim { opacity: .35; } .duo-right { outline: 4px solid #8fe39a; opacity: 1 !important; }
 .duo-res { font-weight: 800; padding: 6px; border-radius: 10px; }
 .duo-ready.p0 { background: #2f80ed; } .duo-ready.p1 { background: #c2410c; }
+.g-check { display: flex; gap: 8px; align-items: flex-start; text-align: left; font-size: 14px; color: var(--ink); } .g-check input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); flex: none; }
+.g-waitrow { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.g-loadnote { color: var(--accent); font-weight: 700; }
+.g-answers .g-ans:disabled { opacity: .55; }

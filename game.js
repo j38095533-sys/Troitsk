@@ -19,7 +19,7 @@ const loadBank = () => bank ? Promise.resolve(bank) : fetch('data/quiz.json').th
 
 const screen = $('game');
 function show(html) { screen.hidden = false; document.body.classList.add('in-game'); const box = $('game-box'); box.innerHTML = ''; box.append(...[].concat(html)); }
-function close() { document.querySelectorAll('.duo').forEach(n => n.remove()); clearInterval(beatId); clearInterval(watchId); screen.hidden = true; document.body.classList.remove('in-game'); if (client) { try { client.end(true); } catch (e) {} client = null; } clearInterval(timerId); }
+function close() { document.querySelectorAll('.duo').forEach(n => n.remove()); pair = null; clearInterval(beatId); clearInterval(watchId); screen.hidden = true; document.body.classList.remove('in-game'); if (client) { try { client.end(true); } catch (e) {} client = null; } clearInterval(timerId); }
 $('game-close').addEventListener('click', () => { if (role === 'host' && phase !== 'end' && phase !== 'menu' && !confirm('Закончить игру?')) return; if (role === 'host') publishState({ phase: 'end', scores: board() }); close(); });
 
 // ---------- связь: сразу все каналы ----------
@@ -109,15 +109,13 @@ function menu() {
   const pin = new URLSearchParams(location.search).get('pin');
   const b1 = el('button', 'g-big g-student', 'Я ученик'), b2 = el('button', 'g-big g-teacher', 'Я учитель');
   const b3 = el('button', 'g-big g-solo', 'Играть одному');
-  const b4 = el('button', 'g-big g-duo', '👥 Вдвоём на одном телефоне');
-  b1.onclick = () => studentJoin(pin); b2.onclick = teacherLogin; b3.onclick = soloStart; b4.onclick = duoStart;
+  b1.onclick = () => studentJoin(pin); b2.onclick = teacherLogin; b3.onclick = soloStart;
   const best = store.get('tq-best', 0);
   const review = el('button', 'g-big g-review', '📖 Повторить перед игрой'); review.onclick = summaryScreen;
   show([el('h2', 'g-title', 'Викторина «Троицк сквозь время»'),
     el('p', 'g-sub', 'Учитель создаёт игру, ученики входят по коду со своих телефонов.'), b1, b2,
     review,
-    el('p', 'g-sub', 'Или потренируйся сам — 10 вопросов на время' + (best ? ` (твой рекорд: ${best})` : '') + ':'), b3,
-    el('p', 'g-sub', 'Нет интернета или телефона у друга? Играйте вдвоём на одном — без интернета:'), b4]);
+    el('p', 'g-sub', 'Или потренируйся сам — 10 вопросов на время' + (best ? ` (твой рекорд: ${best})` : '') + ':'), b3]);
   if (pin) studentJoin(pin);
 }
 window.openGame = menu;
@@ -128,32 +126,59 @@ function studentJoin(pin) {
   role = 'student';
   const inPin = el('input', 'g-input'); inPin.inputMode = 'numeric'; inPin.maxLength = 6; inPin.placeholder = 'Код игры (6 цифр)'; inPin.value = pin || '';
   const inName = el('input', 'g-input'); inName.maxLength = 18; inName.placeholder = 'Твоё имя'; inName.value = store.get('tq-name', '');
+  const pairBox = el('label', 'g-check'); const pairIn = el('input'); pairIn.type = 'checkbox';
+  pairBox.append(pairIn, el('span', '', ' 👥 Нас двое на одном телефоне (у друга нет телефона или интернета)'));
+  const inName2 = el('input', 'g-input'); inName2.maxLength = 18; inName2.placeholder = 'Имя второго игрока'; inName2.hidden = true;
+  pairIn.onchange = () => { inName2.hidden = !pairIn.checked; };
   const err = el('div', 'g-err'); const go = el('button', 'g-big g-student', 'Войти в игру');
   go.onclick = async () => {
     const p = inPin.value.replace(/\D/g, ''), n = inName.value.trim();
     if (p.length !== 6) { err.textContent = 'Код — 6 цифр с экрана учителя'; return; }
     if (!n) { err.textContent = 'Напиши имя'; return; }
+    const n2 = inName2.value.trim();
+    if (pairIn.checked && !n2) { err.textContent = 'Напиши имя второго игрока'; return; }
     store.set('tq-name', n); go.disabled = true; err.textContent = 'Подключаюсь…';
     try {
       const { c } = await connectAny(+p[0] - 1); client = c;
       me = { id: store.get('tq-id', null) || Math.random().toString(36).slice(2, 10), name: n, pin: p };
       store.set('tq-id', me.id);
-      if (window.stat) window.stat('game', { kind: 'student' });
+      if (window.stat) window.stat('game', { kind: pairIn.checked ? 'pair' : 'student' });
+      if (pairIn.checked) { pairInit([n, n2]); me.id = pair.players[0].id; }
       client.subscribe(ROOT + p + '/state', { qos: 1 });
       client.on('message', (t, m) => { lastMsgAt = Date.now(); if (!m.length) return; try { onState(JSON.parse(m.toString())); } catch (e) {} });
       lastMsgAt = Date.now(); startWatchdog(p);
-      const hello = () => client.publish(ROOT + p + '/join', JSON.stringify({ id: me.id, name: n }), { qos: 1 });
+      const hello = () => (pair ? pair.players : [{ id: me.id, name: n }]).forEach(pl =>
+        client.publish(ROOT + p + '/join', JSON.stringify({ id: pl.id, name: pl.name }), { qos: 1 }));
       hello(); client.on('connect', hello);
-      waitScreen('Ты в игре, ' + n + '!', 'Смотри на экран учителя — скоро начнём.');
-      setTimeout(() => { if (!lastState) waitScreen('Ждём учителя…', 'Проверь код: ' + p + '. Если игра ещё не создана — подожди.'); }, 6000);
+      if (pair) pairState({ phase: 'lobby', players: 0 }); else waitScreen('Ты в игре, ' + n + '!', 'Смотри на экран учителя — скоро начнём.');
+      setTimeout(() => { if (!lastState && !pair) waitScreen('Ждём учителя…', 'Проверь код: ' + p + '. Если игра ещё не создана — подожди.'); }, 6000);
     } catch (e) { err.textContent = e.message; go.disabled = false; }
   };
-  show([el('h2', 'g-title', 'Вход в игру'), inPin, inName, go, err]);
+  show([el('h2', 'g-title', 'Вход в игру'), inPin, inName, pairBox, inName2, go, err]);
 }
 function waitScreen(t, s) {
   const parts = [el('div', 'g-wait-dot'), el('h2', 'g-title', t), el('p', 'g-sub', s)];
   if (role === 'student') { const r = el('button', 'g-link', '↻ Обновить, если завис'); r.onclick = () => resync(true); parts.push(r); }
   show(parts);
+}
+
+// вопрос пришёл, таймер ещё не запущен: грузим картинку и сообщаем учителю «готов»
+function studentLoading(s) {
+  clearInterval(timerId);
+  const btns = el('div', 'g-answers');
+  s.options.forEach((o, i) => { const b = el('button', 'g-ans g-c' + i); b.disabled = true; b.append(el('span', 'g-shape', SHAPES[i]), el('span', '', o)); btns.append(b); });
+  const parts = [el('div', 'g-qnum', `Вопрос ${s.qi + 1} из ${s.total}`), el('h2', 'g-q', s.q)];
+  const note = el('div', 'g-loadnote', '⏳ Ждём, пока вопрос загрузится у всех…');
+  const ready = () => {
+    if (readySent === s.qi) return; readySent = s.qi;
+    client.publish(ROOT + me.pin + '/ans', JSON.stringify({ id: me.id, name: me.name, qi: s.qi, ready: 1 }), { qos: 1 });
+  };
+  if (s.img) {
+    const im = el('img', 'g-qimg'); parts.push(im);
+    im.onload = im.onerror = ready; im.src = s.img;
+    setTimeout(ready, 8000);                          // картинка не грузится — не держим весь класс
+  } else ready();
+  show([...parts, note, btns]);
 }
 
 // сторож: учитель шлёт состояние каждые 4 с; тишина > 10 с = связь уснула — переподключаемся и берём сохранённое состояние
@@ -175,7 +200,8 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && ro
 let timerId = null, preloaded = false;
 function onState(s) {
   lastState = s;
-  const key = s.phase + ':' + (s.qi ?? '') + (s.phase === 'lobby' ? ':' + s.players : '');
+  if (pair) return pairState(s);
+  const key = s.phase + ':' + (s.qi ?? '') + (s.phase === 'lobby' ? ':' + s.players : '') + (s.phase === 'question' ? ':' + (s.go !== false) : '');
   if (key === rendered) return;                    // повтор от учителя — экран уже актуален
   rendered = key;
   if (s.phase === 'lobby' && s.pre && !preloaded) { preloaded = true; s.pre.forEach(u => { const i = new Image(); i.src = u; }); }
@@ -184,8 +210,10 @@ function onState(s) {
   else if (s.phase === 'reveal') studentReveal(s);
   else if (s.phase === 'end') studentEnd(s);
 }
+let readySent = -1;
 function studentQuestion(s) {
   if (answeredQ === s.qi) return;                      // уже ответил на этот вопрос
+  if (s.go === false) return studentLoading(s);
   const got = Date.now(), dur = Math.max(4000, s.dur * 1000 - (s.elapsed || 0));
   const bar = el('div', 'g-timer'); const fill = el('i'); bar.append(fill);
   const btns = el('div', 'g-answers');
@@ -259,15 +287,18 @@ async function teacherSetup() {
   const pick = () => b.filter(q => sel.has(q.place || '__town'));
   const count = () => { const n = pick().length + own.length; info.textContent = `Доступно вопросов: ${n} (своих: ${own.length})`; };
   count();
+  const waitBox = el('label', 'g-check'); const waitIn = el('input'); waitIn.type = 'checkbox'; waitIn.checked = store.get('tq-wait', false);
+  waitBox.append(waitIn, el('span', '', ' Ждать, пока вопрос загрузится у всех, и только потом запускать таймер'));
   const go = el('button', 'g-big g-teacher', 'Создать игру');
   go.onclick = () => {
     let qs = shuffle(pick().concat(own));
     if (nSel.value !== 'все') qs = qs.slice(0, +nSel.value);
     if (!qs.length) { info.textContent = 'Выберите хотя бы одно место'; return; }
-    hostGame(qs, +tSel.value);
+    store.set('tq-wait', waitIn.checked);
+    hostGame(qs, +tSel.value, waitIn.checked);
   };
   const addOwn = el('button', 'g-link', '+ Добавить свой вопрос'); addOwn.onclick = ownEditor;
-  show([el('h2', 'g-title', 'Новая игра'), el('p', 'g-sub', 'Вопросы по местам:'), chips, nSel, tSel, info, go, addOwn]);
+  show([el('h2', 'g-title', 'Новая игра'), el('p', 'g-sub', 'Вопросы по местам:'), chips, nSel, tSel, waitBox, info, go, addOwn]);
 }
 function ownEditor() {
   const own = store.get('tq-own', []);
@@ -291,19 +322,19 @@ let H = null;   // { pin, qs, dur, players:Map, qi, answers:Map, t0 }
 let lastPub = null, beatId = null;
 function publishState(s) {
   if (!client || !H) return;
-  if (s.phase === 'question') s = { ...s, elapsed: Date.now() - H.t0 };
+  if (s.phase === 'question') s = { ...s, go: !!H.go, elapsed: H.go ? Date.now() - H.t0 : 0 };
   lastPub = s;
   client.publish(ROOT + H.pin + '/state', JSON.stringify(s), { qos: 1, retain: true });
   clearInterval(beatId);
   if (s.phase !== 'end') beatId = setInterval(() => {
     if (!client || !H || !lastPub) return;
-    const b = lastPub.phase === 'question' ? { ...lastPub, elapsed: Date.now() - H.t0 } : lastPub;
+    const b = lastPub.phase === 'question' ? { ...lastPub, go: !!H.go, elapsed: H.go ? Date.now() - H.t0 : 0 } : lastPub;
     client.publish(ROOT + H.pin + '/state', JSON.stringify(b), { qos: 1, retain: true });
   }, 4000);
 }
 const board = () => H ? [...H.players.values()].sort((a, b) => b.score - a.score) : [];
 
-async function hostGame(qs, dur) {
+async function hostGame(qs, dur, wait = true) {
   phase = 'connecting'; waitScreen('Создаю игру…', 'Подключаюсь к серверу игры');
   let c, i;
   try { ({ c, i } = await connectAny()); } catch (e) { show([el('h2', 'g-title', 'Нет связи'), el('p', 'g-sub', e.message)]); return; }
@@ -311,7 +342,7 @@ async function hostGame(qs, dur) {
   const pin = String(i + 1) + String(Math.floor(Math.random() * 1e5)).padStart(5, '0');
   // перемешиваем варианты, запоминаем правильный
   qs = qs.map(q => { const order = shuffle([0, 1, 2, 3]); return { ...q, options: order.map(k => q.options[k]), a: order.indexOf(q.a) }; });
-  H = { pin, qs, dur, players: new Map(), qi: -1, answers: new Map() };
+  H = { pin, qs, dur, wait, players: new Map(), qi: -1, answers: new Map(), ready: new Set(), go: false };
   if (window.stat) window.stat('game', { kind: 'teacher' });
   client.subscribe([ROOT + pin + '/join', ROOT + pin + '/ans'], { qos: 1 });
   client.on('message', (t, m) => {
@@ -323,7 +354,11 @@ async function hostGame(qs, dur) {
     }
     if (t.endsWith('/ans') && d.id && !H.players.has(d.id) && d.name)          // вход ученика потерялся в сети — добавляем по ответу
       H.players.set(d.id, { id: d.id, name: String(d.name).slice(0, 18), score: 0, last: null });
-    if (t.endsWith('/ans') && phase === 'question' && d.qi === H.qi && H.players.has(d.id) && !H.answers.has(d.id)) {
+    if (t.endsWith('/ans') && d.ready) {                                   // «вопрос загрузился у меня»
+      if (phase === 'question' && d.qi === H.qi && !H.go) { H.ready.add(d.id); updateReady(); }
+      return;
+    }
+    if (t.endsWith('/ans') && phase === 'question' && H.go && d.qi === H.qi && H.players.has(d.id) && !H.answers.has(d.id)) {
       H.answers.set(d.id, { c: d.c, ms: Math.min(+d.ms || 0, H.dur * 1000) });
       $('g-anscount') && ($('g-anscount').textContent = `Ответили: ${H.answers.size} из ${H.players.size}`);
       if (H.answers.size >= H.players.size) reveal();
@@ -345,7 +380,7 @@ function lobby() {
     qrBox, el('p', 'g-sub', 'или отсканируйте QR-код'), names, start]);
 }
 function nextQuestion() {
-  H.qi++; H.answers = new Map();
+  H.qi++; H.answers = new Map(); H.ready = new Set(); H.go = !H.wait;
   if (H.qi >= H.qs.length) return finish();
   phase = 'question'; H.t0 = Date.now(); sendQuestion(false);
   const q = H.qs[H.qi];
@@ -356,8 +391,27 @@ function nextQuestion() {
   const skip = el('button', 'g-link', 'Показать ответ сейчас ›'); skip.onclick = reveal;
   const parts = [el('div', 'g-qnum', `Вопрос ${H.qi + 1} из ${H.qs.length}`), el('h2', 'g-q', q.q)];
   if (q.img) { const im = el('img', 'g-qimg'); im.src = q.img; parts.push(im); }
-  show([...parts, bar, grid, cnt, skip]);
+  const waitRow = el('div', 'g-waitrow');
+  const waitTxt = el('span', 'g-sub'); waitTxt.id = 'g-ready';
+  const now = el('button', 'g-link', 'Начать сейчас ›'); now.onclick = startTimer;
+  waitRow.append(waitTxt, now);
+  show([...parts, bar, grid, H.go ? cnt : waitRow, skip]);
+  H.ui = { fill, cnt, waitRow };
   clearInterval(timerId);
+  if (H.go) startTimer(); else { updateReady(); H.waitTimer = setTimeout(startTimer, 12000); }   // не дольше 12 с
+}
+function updateReady() {
+  const n = $('g-ready'); if (n) n.textContent = `⏳ Вопрос загрузился у ${H.ready.size} из ${H.players.size}`;
+  if (!H.go && H.players.size && H.ready.size >= H.players.size) startTimer();
+}
+function startTimer() {
+  if (phase !== 'question' || H.timerQi === H.qi) return;            // таймер этого вопроса уже идёт
+  clearTimeout(H.waitTimer);
+  if (!H.go) { H.go = true; H.t0 = Date.now(); sendQuestion(); }       // общий старт для всех
+  H.timerQi = H.qi;
+  if (H.ui && H.ui.waitRow.isConnected) H.ui.waitRow.replaceWith(H.ui.cnt);
+  clearInterval(timerId);
+  const fill = H.ui.fill;
   timerId = setInterval(() => {
     const left = Math.max(0, H.dur * 1000 - (Date.now() - H.t0)); fill.style.width = (100 * left / (H.dur * 1000)) + '%';
     if (!left) reveal();
@@ -368,7 +422,7 @@ function sendQuestion() {
   publishState({ phase: 'question', qi: H.qi, total: H.qs.length, q: q.q, img: q.img || null, options: q.options, dur: H.dur });
 }
 function reveal() {
-  if (phase !== 'question') return; phase = 'reveal'; clearInterval(timerId);
+  if (phase !== 'question') return; phase = 'reveal'; clearInterval(timerId); clearTimeout(H.waitTimer);
   const q = H.qs[H.qi], counts = [0, 0, 0, 0];
   H.players.forEach(p => { p.last = { ok: false, pts: 0 }; });
   H.answers.forEach((a, id) => {
@@ -476,98 +530,79 @@ function soloEnd() {
     again, menuB]);
 }
 
-// ---------- вдвоём на одном телефоне ----------
-// Телефон лежит между игроками: экран разделён пополам, верхняя половина повёрнута к сидящему напротив.
-// Работает без интернета (вопросы уже в памяти телефона).
-let duo = null;
-async function duoStart() {
-  role = 'duo'; phase = 'duo';
-  if (window.stat) window.stat('game', { kind: 'duo' });
-  const b = await loadBank();
-  const qs = shuffle(b).slice(0, 10).map(q => { const o = shuffle([0, 1, 2, 3]); return { ...q, options: o.map(k => q.options[k]), a: o.indexOf(q.a) }; });
+// ---------- двое учеников на одном телефоне ----------
+// Телефон лежит между ними: экран пополам, верхняя половина повёрнута к сидящему напротив.
+// Для учителя это два отдельных ученика (свои id, имена, ответы и очки) в общей игре класса.
+let pair = null;
+function pairInit(names) {
   document.querySelectorAll('.duo').forEach(n => n.remove());
   const root = el('div', 'duo');
   const halves = [el('div', 'duo-half top'), el('div', 'duo-half bottom')];
   const mid = el('div', 'duo-mid'); const fill = el('i'); mid.append(fill);
   root.append(halves[0], mid, halves[1]);
   screen.append(root);
-  duo = { qs, i: -1, score: [0, 0], ans: [null, null], t0: 0, halves, fill, root };
-  // стартовый экран: каждый жмёт «Готов»
-  const ready = [false, false];
-  halves.forEach((h, p) => {
-    h.innerHTML = '';
-    const btn = el('button', 'g-big duo-ready p' + p, 'Готов!');
-    h.append(el('div', 'duo-name p' + p, 'Игрок ' + (p + 1)), el('p', 'g-sub', '10 вопросов. Кто ответит верно и быстрее — получит больше очков.'), btn);
-    btn.addEventListener('pointerdown', () => {
-      ready[p] = true; btn.textContent = 'Ждём соперника…'; btn.disabled = true;
-      if (ready[0] && ready[1]) setTimeout(duoNext, 500);
-    });
-  });
+  const ids = store.get('tq-pair-ids', null) || [0, 1].map(() => Math.random().toString(36).slice(2, 10));
+  store.set('tq-pair-ids', ids);
+  pair = { root, halves, fill, rendered: '', players: names.map((n, i) => ({ id: ids[i], name: n, answered: -1, readySent: -1 })) };
 }
-function duoNext() {
-  duo.i++;
-  if (duo.i >= duo.qs.length) return duoEnd();
-  const q = duo.qs[duo.i], DUR = 15000;
-  duo.ans = [null, null]; duo.t0 = Date.now(); duo.first = null;
-  duo.halves.forEach((h, p) => {
-    h.innerHTML = '';
-    const head = el('div', 'duo-head'); head.append(el('span', 'duo-name p' + p, 'Игрок ' + (p + 1)), el('span', 'duo-score', duo.score[p] + ' очков'));
-    const parts = [head, el('div', 'g-qnum', `Вопрос ${duo.i + 1} из ${duo.qs.length}`), el('div', 'duo-q', q.q)];
-    if (q.img) { const im = el('img', 'duo-img'); im.src = q.img; parts.push(im); }
+const pairSend = (topic, obj) => client.publish(ROOT + me.pin + topic, JSON.stringify(obj), { qos: 1 });
+function pairHalf(p, nodes) { const h = pair.halves[p]; h.innerHTML = ''; h.append(el('div', 'duo-name p' + p, pair.players[p].name), ...nodes); }
+function pairState(s) {
+  const key = s.phase + ':' + (s.qi ?? '') + (s.phase === 'lobby' ? ':' + s.players : '') + (s.phase === 'question' ? ':' + (s.go !== false) : '');
+  if (key === pair.rendered) return;
+  pair.rendered = key;
+  clearInterval(timerId); pair.fill.style.width = '0%';
+  if (s.phase === 'lobby') {
+    if (s.pre && !preloaded) { preloaded = true; s.pre.forEach(u => { const i = new Image(); i.src = u; }); }
+    pair.players.forEach((pl, p) => pairHalf(p, [el('div', 'g-wait-dot'), el('p', 'g-sub', 'Ты в игре! Ждём остальных. Игроков: ' + (s.players || 0))]));
+  } else if (s.phase === 'question') pairQuestion(s);
+  else if (s.phase === 'reveal') {
+    pair.players.forEach((pl, p) => {
+      const mine = (s.scores || []).find(x => x.id === pl.id), ok = mine && mine.last && mine.last.ok;
+      pairHalf(p, [el('div', 'duo-res ' + (ok ? 'g-ok' : 'g-bad'), ok ? 'Верно! +' + mine.last.pts : 'Неверно'),
+        el('p', 'g-sub', ok ? '' : 'Правильный ответ: ' + s.options[s.correct]),
+        el('div', 'duo-score', 'Очки: ' + (mine ? mine.score : 0) + ' · место ' + (mine ? s.scores.indexOf(mine) + 1 : '—'))]);
+    });
+  } else if (s.phase === 'end') {
+    pair.players.forEach((pl, p) => {
+      const sc = s.scores || [], i = sc.findIndex(x => x.id === pl.id);
+      pairHalf(p, [el('div', 'g-result g-ok', i >= 0 ? (i + 1) + ' место' : 'Игра окончена!'), el('div', 'g-score', i >= 0 ? 'Очки: ' + sc[i].score : '')]);
+    });
+  }
+}
+function pairQuestion(s) {
+  const go = s.go !== false, got = Date.now(), dur = Math.max(4000, s.dur * 1000 - (s.elapsed || 0));
+  pair.players.forEach((pl, p) => {
+    if (go && pl.answered === s.qi) { pairHalf(p, [el('div', 'g-wait-dot'), el('p', 'g-sub', 'Ответ принят! Ждём остальных…')]); return; }
     const grid = el('div', 'g-answers duo-answers');
-    q.options.forEach((o, k) => {
-      const btn = el('button', 'g-ans g-c' + k); btn.append(el('span', 'g-shape', SHAPES[k]), el('span', '', o));
-      btn.addEventListener('pointerdown', ev => { ev.preventDefault(); duoAnswer(p, k); });
+    s.options.forEach((o, k) => {
+      const btn = el('button', 'g-ans g-c' + k); btn.disabled = !go; btn.append(el('span', 'g-shape', SHAPES[k]), el('span', '', o));
+      btn.addEventListener('pointerdown', ev => {
+        ev.preventDefault(); if (!go || pl.answered === s.qi) return;
+        pl.answered = s.qi;
+        pairSend('/ans', { id: pl.id, name: pl.name, qi: s.qi, c: k, ms: Date.now() - got + (s.elapsed || 0) });
+        if (navigator.vibrate) navigator.vibrate(15);
+        pairHalf(p, [el('div', 'g-wait-dot'), el('p', 'g-sub', 'Ответ принят! Ждём остальных…')]);
+      });
       grid.append(btn);
     });
-    parts.push(grid);
-    h.append(...parts);
+    const nodes = [el('div', 'g-qnum', `Вопрос ${s.qi + 1} из ${s.total}`), el('div', 'duo-q', s.q)];
+    if (s.img) { const im = el('img', 'duo-img'); im.src = s.img; nodes.push(im); }
+    if (!go) nodes.push(el('div', 'g-loadnote', '⏳ Ждём, пока загрузится у всех…'));
+    pairHalf(p, [...nodes, grid]);
   });
-  clearInterval(timerId);
+  if (!go) {                                          // сообщить учителю «готово» за обоих
+    const ready = () => pair.players.forEach(pl => { if (pl.readySent !== s.qi) { pl.readySent = s.qi; pairSend('/ans', { id: pl.id, name: pl.name, qi: s.qi, ready: 1 }); } });
+    if (s.img) { const i = new Image(); i.onload = i.onerror = ready; i.src = s.img; setTimeout(ready, 8000); } else ready();
+    return;
+  }
   timerId = setInterval(() => {
-    const left = Math.max(0, DUR - (Date.now() - duo.t0));
-    duo.fill.style.width = (100 * left / DUR) + '%';
-    if (!left) duoReveal();
+    const left = Math.max(0, dur - (Date.now() - got)); pair.fill.style.width = (100 * left / (s.dur * 1000)) + '%';
+    if (!left) {
+      clearInterval(timerId);
+      pair.players.forEach((pl, p) => { if (pl.answered !== s.qi) pairHalf(p, [el('p', 'g-sub', 'Время вышло')]); });
+    }
   }, 100);
-}
-function duoAnswer(p, k) {
-  if (duo.ans[p] !== null || phase !== 'duo') return;
-  const q = duo.qs[duo.i], ms = Date.now() - duo.t0;
-  duo.ans[p] = { k, ms };
-  if (k === q.a && duo.first === null) duo.first = p;
-  if (navigator.vibrate) navigator.vibrate(15);
-  const h = duo.halves[p];
-  h.querySelectorAll('.g-ans').forEach((b, i) => { b.disabled = true; b.classList.toggle('duo-picked', i === k); b.classList.toggle('duo-dim', i !== k); });
-  if (duo.ans[0] !== null && duo.ans[1] !== null) setTimeout(duoReveal, 300);
-}
-function duoReveal() {
-  if (phase !== 'duo' || duo.revealed === duo.i) return;
-  duo.revealed = duo.i; clearInterval(timerId);
-  const q = duo.qs[duo.i];
-  duo.halves.forEach((h, p) => {
-    const a = duo.ans[p], ok = a && a.k === q.a;
-    let pts = 0;
-    if (ok) pts = Math.round(500 + 500 * (1 - Math.min(a.ms, 15000) / 15000)) + (duo.first === p ? 200 : 0);
-    duo.score[p] += pts;
-    h.querySelectorAll('.g-ans').forEach((b, i) => { b.disabled = true; b.classList.toggle('duo-right', i === q.a); b.classList.toggle('duo-dim', i !== q.a); });
-    const res = el('div', 'duo-res ' + (ok ? 'g-ok' : 'g-bad'), a ? (ok ? `Верно! +${pts}` + (duo.first === p ? ' ⚡ первый' : '') : 'Неверно') : 'Время вышло');
-    h.querySelector('.duo-q').after(res);
-    h.querySelector('.duo-score').textContent = duo.score[p] + ' очков';
-  });
-  setTimeout(() => { if (phase === 'duo') duoNext(); }, 2600);
-}
-function duoEnd() {
-  clearInterval(timerId);
-  duo.halves.forEach((h, p) => {
-    h.innerHTML = '';
-    const me = duo.score[p], other = duo.score[1 - p];
-    const title = me === other ? 'Ничья!' : me > other ? 'Победа! 🏆' : 'Почти! 2 место';
-    const again = el('button', 'g-big g-solo', 'Ещё раз'); again.addEventListener('pointerdown', () => duoStart());
-    const quit = el('button', 'g-link', 'Выйти'); quit.addEventListener('pointerdown', () => { duo.root.remove(); menu(); });
-    h.append(el('div', 'duo-name p' + p, 'Игрок ' + (p + 1)), el('div', 'g-result ' + (me >= other ? 'g-ok' : 'g-bad'), title),
-      el('div', 'g-score', `Твои очки: ${me} · соперник: ${other}`), again, quit);
-  });
-  duo.fill.style.width = '0%';
 }
 
 // ссылка вида ?pin=123456 сразу открывает вход ученика
