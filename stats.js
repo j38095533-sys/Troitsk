@@ -24,7 +24,7 @@
     });
     setTimeout(() => resolve(ok), 9000);
   });
-  if (location.hostname === 'localhost' || location.search.includes('debug')) return;   // свои тесты не считаем
+  if (location.hostname === 'localhost' || location.search.includes('debug') || navigator.webdriver) return;   // свои тесты и роботов не считаем
   let S;
   try { S = JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { S = null; }
   const now = Date.now();
