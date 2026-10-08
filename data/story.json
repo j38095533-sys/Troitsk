@@ -1,0 +1,506 @@
+{
+ "title": "Режим истории: Троицк",
+ "subtitle": "Как крепость на реке Уй стала городом",
+ "audience": "12–16 лет",
+ "duration_estimate": "около 3 минут",
+ "style": "Woodcut and copper-engraving comic panel: black ink on warm off-white paper, heavy cross-hatching and parallel-line shading, bold carved contours, deep crimson red (#9e1b1b) as the single main accent color used sparingly for key objects, occasional muted teal (#2f6f6a) accent for water and sky, high-contrast chiaroscuro, dramatic low or high camera angles, cinematic framing, grainy printed texture, portrait 3:4 full-bleed panel, no text, no letters, no speech bubbles, no captions, no logos, no watermark; consistent style across all panels.",
+ "scenes": [
+  {
+   "id": "s01",
+   "year": "до 1743",
+   "title": "Степь у Уя",
+   "captions": [
+    "Степь, река Уй и впадающая в неё Увелька. Здесь, на перекрёстке древних караванных путей, встанет Троицк.",
+    "Караванная торговля Урала со Средней Азией, по энциклопедии, началась ещё в середине 1-го тысячелетия до нашей эры."
+   ],
+   "narration": "Бескрайняя степь. Река Уй, в которую впадает Увелька. Здесь сходились древние караванные пути: торговля Урала со Средней Азией началась ещё до нашей эры.",
+   "interaction": null,
+   "image_a": "Vast empty steppe at dawn seen from a low hill; a winding river (the Uy) cuts across the frame and a smaller river joins it in the middle distance; tall feather grass bending in the wind in the foreground; enormous sky with long streaked clouds; far on the horizon a thin line of tiny camel and rider silhouettes; no buildings, no roads, no people in the foreground; deep perspective, sense of emptiness and scale.",
+   "image_b": null,
+   "sound": "steady steppe wind through tall grass, a distant skylark, faint far-off camel bells",
+   "sources": [
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицкий меновой двор",
+     "url": "http://web.archive.org/web/20231001185649/http://chel-portal.ru/enc/troickiy_menovoy_dvor"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Караванные пути",
+     "url": "http://web.archive.org/web/20240224092245/http://chel-portal.ru/enc/%D0%9A%D0%B0%D1%80%D0%B0%D0%B2%D0%B0%D0%BD%D0%BD%D1%8B%D0%B5_%D0%BF%D1%83%D1%82%D0%B8"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицк",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troick"
+    }
+   ]
+  },
+  {
+   "id": "s02",
+   "year": "1743",
+   "title": "Крепость Святой Троицы",
+   "captions": [
+    "1743 год. Оренбургский начальник И. И. Неплюев закладывает крепость на Уйской пограничной линии, у впадения Увельки в Уй.",
+    "Крепость назвали в честь Святой Троицы: её заложили летом 1743 года: по энциклопедии — 22 мая по старому стилю, по данным историков ЧОУНБ — в июне.",
+    "Все постройки стояли внутри одной стены: сначала деревянного заплота, позже — земляного вала с бастионами."
+   ],
+   "narration": "1743 год. Оренбургский начальник Неплюев закладывает на реке Уй крепость. Её называют в честь праздника Святой Троицы. Сначала стена деревянная, позже — земляной вал с бастионами.",
+   "interaction": {
+    "type": "hold",
+    "label": "Зажми — заложи крепость",
+    "effect": "Empty river bank with survey stakes and a few soldiers turns into a finished square wooden-walled fortress with a gate tower and rows of log houses inside."
+   },
+   "image_a": "High-angle view over the left bank of a steppe river at its confluence with a smaller river; bare ground marked out with wooden survey stakes and ropes forming a large rectangle; a few 18th-century Russian soldiers in tricorn hats and long coats with shovels and axes; a mounted officer in a cloak seen from behind pointing at the ground; a pile of fresh logs; open steppe beyond the river; crimson accent on a small banner on a pole.",
+   "image_b": "Same camera and composition: the staked rectangle is now a finished fortress — a tall wooden palisade wall with a gate tower, log barracks and houses in neat rows inside, a small wooden church with a cross in the center, smoke from chimneys; the crimson banner now flies over the gate tower.",
+   "sound": "wind, axes chopping logs, hammering, shouted commands far away, river water",
+   "sfx_on_action": "rapid build-up of hammer blows and creaking timber ending in a heavy gate slamming shut",
+   "sources": [
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицк",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troick"
+    },
+    {
+     "name": "ЧОУНБ, Календарь знаменательных дат (Р. Н. Гизатуллин, Г. Х. Самигулов)",
+     "url": "http://web.archive.org/web/2024/https://chelreglib.ru/ru/cid/detail/13/"
+    },
+    {
+     "name": "pik174.ru — Комплекс Троицкого (Уйского) собора",
+     "url": "https://pik174.ru/catalog/pamyatniki-arkhitektury/kompleks-troitskogo-uyskogo-sobora-g-troitsk-ul-krasnogvardeyskaya-1a/"
+    },
+    {
+     "name": "Словарь Брокгауза и Ефрона — Троицк",
+     "url": "https://booksite.ru/fulltext/1/001/007/102/102811.htm"
+    }
+   ]
+  },
+  {
+   "id": "s03",
+   "year": "1745–1772",
+   "title": "Меновой двор",
+   "captions": [
+    "С середины 1740-х годов у крепости идёт меновой торг — обмен товара на товар, без денег.",
+    "Казахи пригоняли скот и получали хлеб, ткани, кожи, металлическую посуду.",
+    "Меновой двор стоял за рекой Уй, «на степной стороне», напротив крепости. Рекорд — 1772 год: 223 тысячи голов мелкого скота."
+   ],
+   "narration": "С середины 1740-х годов здесь идёт меновой торг — товар меняют на товар, без денег. Казахи пригоняют скот и получают хлеб, ткани, кожи, посуду. Рекорд — 1772 год: 223 тысячи голов мелкого скота.",
+   "interaction": null,
+   "image_a": "Bird's-eye view across the river: on the near bank a large fenced square trading yard with rows of wooden market stalls around a big open courtyard; inside, a dense crowd of herders with flocks of sheep and horses, traders exchanging sacks of grain, bolts of cloth and copper cauldrons from hand to hand; on the far bank the wooden fortress with its church; dust rising from the herds; crimson accent on bolts of cloth.",
+   "image_b": null,
+   "sound": "bleating sheep, horses snorting, crowd murmur in several languages, wooden stalls creaking",
+   "sources": [
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицкий меновой двор",
+     "url": "http://web.archive.org/web/20231001185649/http://chel-portal.ru/enc/troickiy_menovoy_dvor"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицк",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troick"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Таможня (Троицкая таможня)",
+     "url": "http://web.archive.org/web/20240725013413/http://chel-portal.ru/enc/tamozhnya"
+    },
+    {
+     "name": "Словарь Брокгауза и Ефрона — Троицк",
+     "url": "https://booksite.ru/fulltext/1/001/007/102/102811.htm"
+    }
+   ]
+  },
+  {
+   "id": "s04",
+   "year": "1750",
+   "title": "Караван из Бухары",
+   "captions": [
+    "Путь каравана из Бухары до Троицка — 1500 километров и 52 дня.",
+    "Везли хлопок, ткани, шёлк, парчу, бархат, ковры, каракуль, фрукты и пряности.",
+    "Первая ярмарка — в конце мая 1750 года. По оценке энциклопедии, в лучшие годы она была третьей по обороту после Макарьевской (Нижегородской) и Ирбитской."
+   ],
+   "narration": "Караван из Бухары идёт до Троицка 52 дня — полторы тысячи километров. На верблюдах хлопок, шёлк, парча, ковры, пряности. По оценке энциклопедии, Троицкая ярмарка в лучшие годы была третьей после Макарьевской и Ирбитской.",
+   "interaction": {
+    "type": "hold",
+    "label": "Зажми — веди караван",
+    "effect": "Empty desert-steppe horizon fills with a long camel caravan that winds from the horizon to the gate of the walled trading yard in the foreground."
+   },
+   "image_a": "Low camera close to the ground at the wooden gate tower of a walled trading yard in the foreground right; empty rolling dry steppe stretching to a far flat horizon under a huge sky; a single lantern on the gate; long shadows of late afternoon; heat shimmer near the horizon; mood of waiting.",
+   "image_b": "Same camera and composition: a long caravan of laden two-humped camels and riders in turbans and striped robes now snakes from the horizon all the way to the open gate; bales, rolled carpets and bundles of cloth on the camels; the lead camel's saddle cloth in crimson; dust trail glowing.",
+   "sound": "desert wind, soft padding of camel feet, creak of ropes on bales",
+   "sfx_on_action": "swelling chorus of camel bells and hooves approaching, ending with the gate creaking open",
+   "sources": [
+    {
+     "name": "Энциклопедия «Челябинская область» — Караванные пути",
+     "url": "http://web.archive.org/web/20240224092245/http://chel-portal.ru/enc/%D0%9A%D0%B0%D1%80%D0%B0%D0%B2%D0%B0%D0%BD%D0%BD%D1%8B%D0%B5_%D0%BF%D1%83%D1%82%D0%B8"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицкий меновой двор",
+     "url": "http://web.archive.org/web/20231001185649/http://chel-portal.ru/enc/troickiy_menovoy_dvor"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Ярмарки и базары",
+     "url": "http://web.archive.org/web/20230303012614/http://chel-portal.ru/enc/yarmarki_i_bazary"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицк",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troick"
+    }
+   ]
+  },
+  {
+   "id": "s05",
+   "year": "1754–1762",
+   "title": "Первый камень",
+   "captions": [
+    "1754 год: заложен каменный Троицкий собор. Строительство закончили в 1761–1762 годах.",
+    "Это первое каменное здание крепости. Проект связывают с именем петербургского архитектора П. А. Трезини."
+   ],
+   "narration": "1754 год. В крепости закладывают каменный собор. Его закончат в 1762 году: это первое каменное здание крепости. Проект связывают с именем петербургского архитектора Трезини.",
+   "interaction": {
+    "type": "hold",
+    "label": "Зажми — подними стены",
+    "effect": "Stone foundation with timber scaffolding grows into a finished white five-domed stone church (no bell tower yet) towering over the wooden houses."
+   },
+   "image_a": "Eye-level view inside the wooden fortress: a rectangular stone foundation and low walls of a church rising among log houses; wooden scaffolding, ladders, a hand-cranked hoist lifting a stone block; masons in 18th-century shirts and aprons; piles of bricks and lime; the river glinting behind; crimson accent on the hoist rope.",
+   "image_b": "Same camera and composition: the scaffolding is gone; a finished whitewashed stone church with five domes and crosses stands where the foundation was, without a bell tower; log houses around look small next to it; birds circling the central dome.",
+   "sound": "chisels on stone, creaking wooden hoist, masons' calls, wind",
+   "sfx_on_action": "stone blocks thudding into place one after another, then a calm low resonant tone",
+   "sources": [
+    {
+     "name": "pik174.ru — Комплекс Троицкого (Уйского) собора",
+     "url": "https://pik174.ru/catalog/pamyatniki-arkhitektury/kompleks-troitskogo-uyskogo-sobora-g-troitsk-ul-krasnogvardeyskaya-1a/"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицк",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troick"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Собор в честь Святой Троицы",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/sobor_svyatoy_troicy"
+    }
+   ]
+  },
+  {
+   "id": "s06",
+   "year": "1774",
+   "title": "Пугачёв у стен",
+   "captions": [
+    "Май 1774 года. Отряд Пугачёва — по энциклопедии, около 10 тысяч человек — берёт Троицкую крепость.",
+    "Повстанцы удерживают её лишь сутки: 21 мая войска Деколонга разбивают Пугачёва.",
+    "Старая открытка: «Собор, двери коего прострелены Пугачёвым». Что двери те самые — лишь предание."
+   ],
+   "narration": "Май 1774 года. Отряд Пугачёва, около 10 тысяч человек, берёт крепость. Но удерживает её лишь сутки: 21 мая войска Деколонга разбивают повстанцев. О тех днях напоминает предание о простреленных дверях собора.",
+   "interaction": null,
+   "image_a": "Night scene from outside the fortress wall: a mass of rebel horsemen and foot fighters with pikes, scythes and banners storming the wooden gate; smoke and sparks rising; the dark silhouette of the five-domed stone church inside the walls lit from below by crimson firelight; dramatic diagonal composition, no gore, figures mostly in silhouette.",
+   "image_b": null,
+   "sound": "distant musket shots, war cries, galloping horses, crackling fire",
+   "sources": [
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицк",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troick"
+    },
+    {
+     "name": "ЧОУНБ, Календарь знаменательных дат (Р. Н. Гизатуллин, Г. Х. Самигулов)",
+     "url": "http://web.archive.org/web/2024/https://chelreglib.ru/ru/cid/detail/13/"
+    },
+    {
+     "name": "Словарь Брокгауза и Ефрона — Троицк",
+     "url": "https://booksite.ru/fulltext/1/001/007/102/102811.htm"
+    }
+   ]
+  },
+  {
+   "id": "s07",
+   "year": "1784",
+   "title": "Крепость становится городом",
+   "captions": [
+    "1784 год. Указ: Троицкую крепость «по выгодности ея положения и по торговле в ней производимой» учредить уездным городом.",
+    "Город растёт на торговле: по переписи 1897 года здесь около 23,3 тысячи жителей и 253 лавки, из них 40 каменных."
+   ],
+   "narration": "1784 год. Указ: за выгодное положение и торговлю крепость становится уездным городом. Город растёт: по переписи 1897 года здесь живут около двадцати трёх тысяч человек.",
+   "interaction": {
+    "type": "hold",
+    "label": "Зажми — поставь печать",
+    "effect": "An unsealed decree on a desk receives a crimson wax seal; through the window behind, the walled fortress turns into a town with streets and many roofs."
+   },
+   "image_a": "Close-up of an 18th-century writing desk: a large unrolled decree sheet covered with illegible decorative handwriting (no readable text), a quill and inkpot, a stick of crimson sealing wax and a brass seal; behind the desk a tall window showing the small walled fortress on the river; candlelight from the side.",
+   "image_b": "Same camera and composition: a large crimson wax seal is now pressed onto the decree; through the window the scene has changed — the fortress walls have given way to a spreading town of streets, houses and the stone church, with a market square full of people.",
+   "sound": "quiet room, candle flicker, quill scratching, town noise muffled outside",
+   "sfx_on_action": "heavy thump of a seal pressed into wax, then a burst of distant bustling town sounds",
+   "sources": [
+    {
+     "name": "ЧОУНБ, Календарь знаменательных дат (Р. Н. Гизатуллин, Г. Х. Самигулов)",
+     "url": "http://web.archive.org/web/2024/https://chelreglib.ru/ru/cid/detail/13/"
+    },
+    {
+     "name": "Словарь Брокгауза и Ефрона — Троицк",
+     "url": "https://booksite.ru/fulltext/1/001/007/102/102811.htm"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицк",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troick"
+    }
+   ]
+  },
+  {
+   "id": "s08",
+   "year": "1860-е",
+   "title": "Каменные ряды",
+   "captions": [
+    "В 1859 году купец Гайса Яушев просит разрешения строить каменные торговые ряды.",
+    "Их возводят в 1867 – начале 1870-х годов: П-образное здание 120 на 73 метра с крытой арочной галереей.",
+    "Это единственные сохранившиеся в Челябинской области торговые ряды середины XIX века."
+   ],
+   "narration": "В 1859 году купец Гайса Яушев просит разрешения построить каменные торговые ряды. Их возводят в 1867 – начале 1870-х годов. Это единственные торговые ряды той эпохи, сохранившиеся в Челябинской области.",
+   "interaction": null,
+   "image_a": "Wide street-level view of a long one-storey stone trading arcade with a continuous covered gallery of repeating arches, shop doors under each arch; opposite it a two-storey merchant building; a busy square with horse carts, merchants in long coats and caps, sacks and crates; a five-domed church in the background beyond the arcade; crimson accent on shop awnings.",
+   "image_b": null,
+   "sound": "bustling 19th-century market, cart wheels on cobbles, merchants calling, a horse neighing",
+   "sources": [
+    {
+     "name": "Энциклопедия «Челябинская область» — Торговые ряды",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/torgovye_ryady"
+    },
+    {
+     "name": "pik174.ru — Здание торговых рядов",
+     "url": "https://pik174.ru/catalog/pamyatniki-arkhitektury/zdanie-torgovykh-ryadov-g-troitsk-chelyabinskaya-oblast-ul-klimova-5a/"
+    },
+    {
+     "name": "pik174.ru — Комплекс доходных домов Яушевых (Гостиный двор)",
+     "url": "https://pik174.ru/catalog/pamyatniki-arkhitektury/kompleks-dokhodnykh-domov-yaushevykh-gostinyy-dvor-chelyabinskaya-oblast-g-troitsk-ul-im-stepana-raz/"
+    }
+   ]
+  },
+  {
+   "id": "s09",
+   "year": "1911",
+   "title": "Пассаж Яушевых",
+   "captions": [
+    "1911 год. Торговый дом «Братья Яушевы» открывает трёхэтажный Пассаж у Нижнего базара.",
+    "Внутри — телефон, грузовой лифт и электрический свет. Витрины — зеркальные, из итальянского стекла.",
+    "Здание венчали два «французских» купола. До наших дней они не сохранились."
+   ],
+   "narration": "1911 год. Братья Яушевы открывают трёхэтажный Пассаж. Здесь телефон, грузовой лифт и электрический свет, а витрины — из итальянского стекла.",
+   "interaction": {
+    "type": "hold",
+    "label": "Зажми — включи свет",
+    "effect": "The dim interior gallery of the arcade lights up: electric lamps glow, mirrored shop windows sparkle."
+   },
+   "image_a": "Interior of an early-20th-century three-storey shopping arcade seen from the ground floor looking along a wide central passage: shop fronts with large glass display windows on both sides, balconies above, unlit hanging electric lamps; early-1910s shoppers and clerks in European clothes as dim silhouettes; gloomy grey daylight from above.",
+   "image_b": "Same camera and composition: all hanging electric lamps blaze with warm light, display windows reflect and sparkle, the passage is bright and lively; crimson accent on a lamp shade and a shop sign board without letters.",
+   "sound": "indoor crowd murmur, footsteps on tiled floor, a distant telephone bell",
+   "sfx_on_action": "click of a big switch, electrical hum rising, a telephone ringing",
+   "sources": [
+    {
+     "name": "Энциклопедия «Челябинская область» — Пассаж Яушевых",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/Пассаж_Яушевых"
+    },
+    {
+     "name": "pik174.ru — Здание пассажа Яушевых",
+     "url": "https://pik174.ru/catalog/pamyatniki-arkhitektury/zdanie-passazha-yaushevykh-g-troitsk-ul-malysheva-34/"
+    }
+   ]
+  },
+  {
+   "id": "s10",
+   "year": "1911–1912",
+   "title": "Первый поезд",
+   "captions": [
+    "Железную дорогу ведут от станции Полетаево. Первый поезд приходит в Троицк в октябре 1911 года.",
+    "Регулярное движение — с 1912-го. Газета «Степь»: город, «вчера ещё медвежий угол», «приобщается к мировой культуре»."
+   ],
+   "narration": "Железную дорогу ведут от станции Полетаево. Первый поезд приходит в Троицк в октябре 1911 года, регулярное движение начинается в 1912-м. Местная газета пишет: вчерашний медвежий угол приобщается к мировой культуре.",
+   "interaction": {
+    "type": "hold",
+    "label": "Зажми — дай гудок",
+    "effect": "An empty platform at a new station building is filled by an arriving steam locomotive in billowing steam, with a crowd waving."
+   },
+   "image_a": "Low three-quarter view along a new railway platform in autumn: a fresh brick station building on the right, empty rails curving away to the steppe horizon, a few people in early-1910s coats and hats waiting, bare birch trees, fallen leaves blowing; cold clear light.",
+   "image_b": "Same camera and composition: a black steam locomotive with crimson wheels pulls a short train into the station, huge clouds of white steam rolling over the platform, the waiting people now waving hats and scarves.",
+   "sound": "autumn wind, rustling leaves, quiet expectant crowd",
+   "sfx_on_action": "long steam whistle, chuffing locomotive braking, hiss of steam and a cheer",
+   "sources": [
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицко-Орская железная дорога",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troicko-orskaya_zheleznaya_doroga"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Станция Троицк",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troick_stanciya"
+    },
+    {
+     "name": "pik174.ru — Здание железнодорожного вокзала",
+     "url": "https://pik174.ru/catalog/pamyatniki-arkhitektury/zdanie-zheleznodorozhnogo-vokzala-goroda-troitska-gorod-troitsk-ulitsa-kirova-dom-28/"
+    },
+    {
+     "name": "pik174.ru — Веерное локомотивное депо станции Троицк",
+     "url": "https://pik174.ru/catalog/pamyatniki-arkhitektury/veernoe-lokomotivnoe-depo-zheleznodorozhnoy-stantsii-troitsk-gorod-troitsk-ulitsa-kirova-dom-40-a/"
+    }
+   ]
+  },
+  {
+   "id": "s11",
+   "year": "1917–1919",
+   "title": "Гражданская война",
+   "captions": [
+    "Конец декабря 1917 года: по железной дороге в Троицк эшелонами входят красногвардейские отряды.",
+    "Июнь 1918 года: город у белых. Взвод, охранявший склад в Пассаже, пять дней держит оборону.",
+    "4 августа 1919 года Красная армия занимает Троицк в ходе Челябинской операции."
+   ],
+   "narration": "Гражданская война. Город не раз переходит из рук в руки. В конце 1917 года по железной дороге приходят красногвардейцы, летом 1918 года город занимают белые, а 4 августа 1919 года — Красная армия.",
+   "interaction": null,
+   "image_a": "Winter night at a railway station: a long military train of freight wagons stands in falling snow, armed soldiers in greatcoats and fur hats climbing down, a single lantern casting crimson light, steam from the locomotive mixing with snow, the dark silhouette of the town and church domes behind; tense atmosphere, no violence shown.",
+   "image_b": null,
+   "sound": "snowstorm wind, idling locomotive, boots crunching snow, distant gunfire",
+   "sources": [
+    {
+     "name": "Шведов И. В. (Вестник ЮУрГУ, 2019)",
+     "url": "https://cyberleninka.ru/article/n/severnyy-letuchiy-i-samarskiy-krasnogvardeyskiy-otryady-v-razzhiganii-vooruzhennogo-protivostoyaniya-na-yuzhnom-urale"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицк",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troick"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Пассаж Яушевых",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/Пассаж_Яушевых"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Челябинская операция",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/chelyabinskaya_operaciya"
+    }
+   ]
+  },
+  {
+   "id": "s12",
+   "year": "1941–1945",
+   "title": "Тыл",
+   "captions": [
+    "В войну в Троицк эвакуируют заводы. Из московского завода вырастает Троицкий электромеханический.",
+    "5 декабря 1941 года он выпускает первую партию радиаторов для самолётов, а с 1943-го — и для танков.",
+    "В здании окружного суда работает эвакогоспиталь № 1730."
+   ],
+   "narration": "Великая Отечественная война. В Троицк эвакуируют заводы. 5 декабря 1941 года электромеханический завод выпускает первые радиаторы для самолётов, с 1943 года — и для танков. В городе работают эвакогоспитали.",
+   "interaction": {
+    "type": "hold",
+    "label": "Зажми — запусти станки",
+    "effect": "A dark, cold improvised workshop comes alive: lamps on, machines running, workers at benches, finished radiators stacked."
+   },
+   "image_a": "Interior of a large old brick hall converted into a wartime workshop at night in winter: crates with evacuated machine tools half-unpacked, frost on tall windows, silent lathes under tarpaulins, a single bare bulb unlit, breath vapor of two workers in padded jackets standing in the dark.",
+   "image_b": "Same camera and composition: lamps are on, lathes and presses are running with sparks, rows of workers including women and teenagers in padded jackets at benches, finished metal radiators stacked along the wall, a crimson banner without text hanging high.",
+   "sound": "cold silence, wind against windows, distant train whistle",
+   "sfx_on_action": "electric motors spinning up, rhythmic clanging of metal presses, workshop din",
+   "sources": [
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицкий электромеханический завод",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troickiy_elektromehanicheskiy_zavod"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицк",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troick"
+    },
+    {
+     "name": "pik174.ru — Окружной суд / здание горисполкома",
+     "url": "https://pik174.ru/catalog/pamyatniki-arkhitektury/okruzhnoy-sud-zdanie-troitskogo-gorispolkoma-g-troitsk-ul-im-a-m-klimova-7-/"
+    }
+   ]
+  },
+  {
+   "id": "s13",
+   "year": "1967",
+   "title": "Взорванный храм",
+   "captions": [
+    "Пятиглавая Михайловская церковь стояла на главной площади с 1876 года. Строили её на средства купца В. М. Пупышева.",
+    "В 1967 году храм взорвали. Он простоял 91 год.",
+    "На его месте построили здание горкома. С 1992 года в нём детская школа искусств."
+   ],
+   "narration": "Пятиглавая Михайловская церковь стояла на главной площади с 1876 года. В 1967 году её взорвали — храм простоял 91 год. На его месте построили здание горкома, а сегодня там детская школа искусств.",
+   "interaction": {
+    "type": "hold",
+    "label": "Зажми — вспомни храм",
+    "effect": "Over the empty square with settling dust, a translucent crimson line-drawing of the lost five-domed church with its bell tower appears in its original place, like a memory."
+   },
+   "image_a": "Wide view of a central town square in the late 1960s: an empty patch of broken ground with a low pile of brick rubble and drifting dust in the center, a long arcaded one-storey trading building at the side, Soviet-era lamp posts, a few people in 1960s coats standing still looking at the empty spot; overcast sky.",
+   "image_b": "Same camera and composition: rising from the rubble, a ghostly translucent crimson engraved outline of a tall five-domed church with a bell tower on its west side, drawn in fine lines over the scene, the people still looking at it.",
+   "sound": "hollow wind on an empty square, crows, distant city traffic of the 1960s",
+   "sfx_on_action": "soft reverse-swell of a bell tone and wind, as if a memory returns",
+   "sources": [
+    {
+     "name": "ЧОУНБ, Календарь знаменательных дат (Р. Н. Гизатуллин, Г. Х. Самигулов)",
+     "url": "http://web.archive.org/web/2024/https://chelreglib.ru/ru/cid/detail/13/"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицк",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troick"
+    },
+    {
+     "name": "Е. Д. Королёва, «Православные храмы Троицка» — глава «Михайловская церковь» (перепечатка troitsk74.ru)",
+     "url": "https://www.troitsk74.ru/history/temples/mchurch/"
+    },
+    {
+     "name": "Троицкая ЦБС — «Даты. Троицк»",
+     "url": "https://troickcbs.ru/index.php/daty-troitsk"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Торговые ряды",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/torgovye_ryady"
+    }
+   ]
+  },
+  {
+   "id": "s14",
+   "year": "1990-е — сегодня",
+   "title": "Возвращение",
+   "captions": [
+    "1991: храм Казанского монастыря возвращают Церкви. 1997: верующим возвращают Свято-Троицкий собор, в 1998-м его освящают.",
+    "1 сентября 1992 года в здании старого приходского училища открывается лицей — нынешний Лицей № 13.",
+    "Сегодня Троицк стоит у границы с Казахстаном, а его старые здания помнят всю эту историю."
+   ],
+   "narration": "В девяностые храмы возвращают верующим: в 1997 году — Свято-Троицкий собор, после пожара 1974 года от его глав оставался один барабан. В 1992 году в старом училище открывается лицей. История продолжается.",
+   "interaction": {
+    "type": "hold",
+    "label": "Зажми — верни купола",
+    "effect": "The damaged cathedral with only a bare central drum gets back its domes, crosses and bell tower, standing restored over the river."
+   },
+   "image_a": "View from across the river Uy toward the old stone cathedral: the building is scarred and roofless above, only one bare central drum without a dome remains, empty window openings, scaffolding on one side; the modern town skyline faint behind; quiet evening light reflected in the water.",
+   "image_b": "Same camera and composition: the cathedral is restored — nine domes with crosses, a tall bell tower, clean walls; warm light in its windows; crimson accent of sunset on the domes reflected in the river.",
+   "sound": "gentle river, evening birds, distant children's voices from a schoolyard",
+   "sfx_on_action": "a single bell rings out, followed by several bells in a calm peal",
+   "sources": [
+    {
+     "name": "pik174.ru — Церковь женского Казанского монастыря",
+     "url": "https://pik174.ru/catalog/pamyatniki-arkhitektury/tserkov-zhenskogo-kazanskogo-monastyrya-g-troitsk-ul-im-yu-a-gagarina-1-10/"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Казанский женский монастырь",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/kazanskiy_zhenskiy_monastyr_troick"
+    },
+    {
+     "name": "pik174.ru — Комплекс Троицкого (Уйского) собора",
+     "url": "https://pik174.ru/catalog/pamyatniki-arkhitektury/kompleks-troitskogo-uyskogo-sobora-g-troitsk-ul-krasnogvardeyskaya-1a/"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Собор в честь Святой Троицы",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/sobor_svyatoy_troicy"
+    },
+    {
+     "name": "Официальный сайт МБОУ «Лицей № 13» — «Общие сведения» (копия Web Archive)",
+     "url": "http://web.archive.org/web/20190825035143/https://litsey13trk.educhel.ru/about/info"
+    },
+    {
+     "name": "Сайт МБОУ «Лицей № 13» — «История лицея»",
+     "url": "https://licei13.narod.ru/p2aa1.html"
+    },
+    {
+     "name": "Энциклопедия «Челябинская область» — Троицк",
+     "url": "http://web.archive.org/web/2020/http://chel-portal.ru/enc/troick"
+    }
+   ]
+  }
+ ],
+ "outro": {
+  "captions": [
+   "Рисунки — художественные иллюстрации; факты — по источникам.",
+   "Открой карту и пройди по этим местам сам: собор, Торговые ряды, Пассаж, вокзал и другие остановки."
+  ],
+  "cta": {
+   "label": "Открыть карту",
+   "target": "map"
+  }
+ }
+}
