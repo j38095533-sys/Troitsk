@@ -277,7 +277,7 @@ function teacherLogin() {
 async function teacherSetup() {
   const b = await loadBank(); const own = store.get('tq-own', []);
   const placeNames = { passazh: 'Пассаж', sobor: 'Собор', kazan: 'Монастырь', vokzal: 'Вокзал', ryady: 'Гостиный двор',
-    ploshad: 'Администрация', mikhail: 'Михайловская церковь', torg: 'Торговые ряды', erahtin: 'Дом Ерахтина', licey13: 'Лицей №13', caravan: 'Караванные пути' };
+    ploshad: 'Администрация', mikhail: 'Михайловская церковь', torg: 'Торговые ряды', erahtin: 'Дом Ерахтина', licey13: 'Лицей №13', caravan: 'Караванные пути', gostinitsa: 'Гостиница Башкирова', bashnya: 'Водонапорная башня', gimnaziya: 'Женская гимназия', mechet: 'Мечеть Гатауллы муллы', centr: 'Центральная площадь' };
   const places = [...new Set(b.map(q => q.place).filter(Boolean))].concat(b.some(q => !q.place) ? ['__town'] : []);
   placeNames.__town = 'Весь город';
   const sel = new Set(places);
