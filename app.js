@@ -38,7 +38,8 @@ const map = new maplibregl.Map({
         bounds: [61.45, 53.98, 61.70, 54.15],
         attribution: 'Спутник: <a href="https://s2maps.eu">Sentinel-2 cloudless 2023 by EOX</a> (Copernicus)' },
       // детальный спутник (онлайн); если не грузится или нет сети — виден Sentinel под ним
-      esri: { type: 'raster', tileSize: 256, maxzoom: 19, minzoom: 10, bounds: [61.40, 53.98, 61.72, 54.17],
+      esri: { type: 'raster', tileSize: 256, maxzoom: 18,  // z19 у Esri по Троицку — серая заглушка «Map data not yet available»
+        minzoom: 10, bounds: [61.40, 53.98, 61.72, 54.17],
         tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
         attribution: 'Спутник: Esri, Maxar, Earthstar Geographics' },
       pm: { type: 'vector', url: 'pmtiles://' + base + 'troitsk.pmtiles', minzoom: 10,
