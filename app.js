@@ -1,5 +1,8 @@
 'use strict';
 // Троицк сквозь время: карта → пролёт к точке → вид улицы со слайдером лет.
+// © 2026 Олег Бурылов. Все права защищены. Подпись автора: TSV-OLEG-2026-aef4bc14a4b0
+const TSV_SIG = 'TSV-OLEG-2026-aef4bc14a4b0';
+document.documentElement.dataset.tsv = TSV_SIG;
 
 // вступительный пролёт из космоса (один раз за сеанс; ?debug — без него)
 const INTRO = !location.search.includes('debug') && !sessionStorage.getItem('troitsk-intro');
@@ -24,7 +27,7 @@ const map = new maplibregl.Map({
   maxBounds: WORLD,
   renderWorldCopies: false,
   ...(INTRO ? { center: [61.56, 54.09], zoom: 10.5, pitch: 0, bearing: -35 } : OVERVIEW),
-  attributionControl: { compact: true },
+  attributionControl: { compact: true, customAttribution: '© 2026 Олег Бурылов · «Троицк сквозь время»' },
   hash: location.search.includes('debug'),
   style: {
     version: 8,

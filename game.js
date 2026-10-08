@@ -1,4 +1,5 @@
 'use strict';
+// © 2026 Олег Бурылов. Подпись автора: TSV-OLEG-2026-aef4bc14a4b0
 // Викторина «как Kahoot»: учитель (по паролю) создаёт игру, ученики входят по коду.
 // Связь — сразу несколько публичных каналов (MQTT-брокеры + ntfy.sh); устройство учителя ведёт игру и считает очки.
 
@@ -18,6 +19,7 @@ let bank = null;
 const loadBank = () => bank ? Promise.resolve(bank) : fetch('data/quiz.json').then(r => r.json()).then(b => (bank = b));
 
 const screen = $('game');
+screen.dataset.tsv = 'TSV-OLEG-2026-aef4bc14a4b0';
 function show(html) { screen.hidden = false; document.body.classList.add('in-game'); const box = $('game-box'); box.innerHTML = ''; box.append(...[].concat(html)); }
 function close() { document.querySelectorAll('.duo').forEach(n => n.remove()); pair = null; clearInterval(beatId); clearInterval(watchId); screen.hidden = true; document.body.classList.remove('in-game'); if (client) { try { client.end(true); } catch (e) {} client = null; } clearInterval(timerId); }
 $('game-close').addEventListener('click', () => { if (role === 'host' && phase !== 'end' && phase !== 'menu' && !confirm('Закончить игру?')) return; if (role === 'host') publishState({ phase: 'end', scores: board() }); close(); });

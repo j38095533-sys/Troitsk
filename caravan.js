@@ -1,8 +1,10 @@
 'use strict';
+// © 2026 Олег Бурылов. Подпись автора: TSV-OLEG-2026-aef4bc14a4b0
 // Слой «Караванные пути»: торговля Троицка со Средней Азией и степью (данные — data/caravan.json, проверенные источники).
 (() => {
   let data = null, on = false, layersAdded = false, markers = [];
   const btn = $('caravan-btn'), panel = $('caravan');
+  panel.dataset.tsv = 'TSV-OLEG-2026-aef4bc14a4b0';
   const SRC = 'caravan';
 
   // круг-зона радиусом r метров (для мест, точное положение которых неизвестно)

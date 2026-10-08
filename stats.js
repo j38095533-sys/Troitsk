@@ -1,4 +1,5 @@
 'use strict';
+// © 2026 Олег Бурылов. Подпись автора: TSV-OLEG-2026-aef4bc14a4b0
 // Анонимная статистика для программы Олега (TroitskStats): без имён и личных данных.
 // Каждое устройство хранит у себя сводку (заходы, открытые места, игры) и кладёт её на MQTT-брокеры
 // как «сохраняемое» сообщение — программа на ПК забирает все сводки, даже если была выключена.
@@ -16,6 +17,7 @@
   if (!S.days.includes(today)) S.days.push(today);
   if (S.days.length > 60) S.days = S.days.slice(-60);
   S.mobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+  S.sig = 'TSV-OLEG-2026-aef4bc14a4b0'.slice(-12);
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
   save();
 
