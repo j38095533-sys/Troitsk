@@ -237,3 +237,6 @@ body.caravan-on #chips { display: none; }
 .cv-facts summary { font-weight: 800; color: #f3c66b; cursor: pointer; }
 .cv-facts ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.45; }
 .cv-src { font-size: 11px !important; color: var(--muted); } .cv-src a { color: var(--muted); }
+
+#net-status { position: fixed; left: 0; right: 0; bottom: calc(6px + env(safe-area-inset-bottom)); text-align: center; font-size: 11px; color: var(--muted); pointer-events: none; }
+#net-status.bad { color: #ff8a80; }

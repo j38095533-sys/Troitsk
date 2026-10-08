@@ -1,6 +1,6 @@
 'use strict';
 // Викторина «как Kahoot»: учитель (по паролю) создаёт игру, ученики входят по коду.
-// Связь — публичный MQTT-брокер по WebSocket; устройство учителя ведёт игру и считает очки.
+// Связь — сразу несколько публичных каналов (MQTT-брокеры + ntfy.sh); устройство учителя ведёт игру и считает очки.
 
 (() => {
 const BROKERS = ['wss://broker.hivemq.com:8884/mqtt', 'wss://broker.emqx.io:8084/mqtt', 'wss://test.mosquitto.org:8081/mqtt'];
@@ -22,22 +22,85 @@ function show(html) { screen.hidden = false; document.body.classList.add('in-gam
 function close() { clearInterval(beatId); clearInterval(watchId); screen.hidden = true; document.body.classList.remove('in-game'); if (client) { try { client.end(true); } catch (e) {} client = null; } clearInterval(timerId); }
 $('game-close').addEventListener('click', () => { if (role === 'host' && phase !== 'end' && phase !== 'menu' && !confirm('Закончить игру?')) return; if (role === 'host') publishState({ phase: 'end', scores: board() }); close(); });
 
-// ---------- подключение к брокеру ----------
+// ---------- связь: сразу все каналы ----------
+// В школьных и мобильных сетях РФ отдельные серверы/порты бывают закрыты, поэтому каждое сообщение
+// уходит во все MQTT-брокеры + ntfy.sh (обычный HTTPS, порт 443); повторы отбрасываются по метке _m.
+const NTFY = 'https://ntfy.sh/';
 let client = null;
-function connect(idx) {
-  return new Promise((res, rej) => {
-    const c = mqtt.connect(BROKERS[idx], { connectTimeout: 7000, reconnectPeriod: 2000, clean: true, keepalive: 15, resubscribe: true,
+const ntfyTopic = t => 'tq1_' + t.replace(ROOT, '').replace(/[^A-Za-z0-9]/g, '_');
+function makeBus() {
+  const handlers = { message: [], connect: [] }, seen = new Set(), seenQ = [];
+  const subs = new Set(), ws = new Map();
+  const emit = (ev, ...a) => handlers[ev].forEach(f => { try { f(...a); } catch (e) {} });
+  const deliver = (topic, text) => {
+    let mid = null;
+    try { mid = JSON.parse(text)._m; } catch (e) {}
+    if (mid) { if (seen.has(mid)) return; seen.add(mid); seenQ.push(mid); if (seenQ.length > 600) seen.delete(seenQ.shift()); }
+    emit('message', topic, text);
+  };
+  // MQTT: подключаемся ко всем брокерам параллельно и держим те, что ответили
+  const mq = BROKERS.map(url => {
+    const c = mqtt.connect(url, { connectTimeout: 7000, reconnectPeriod: 3000, clean: true, keepalive: 15, resubscribe: true,
       clientId: 'tq_' + Math.random().toString(16).slice(2, 10) });
-    const t = setTimeout(() => { c.end(true); rej(new Error('timeout')); }, 8000);
-    c.once('connect', () => { clearTimeout(t); res(c); });
-    c.once('error', () => {});
+    c.on('error', () => {});
+    c.on('connect', () => { subs.forEach(t => c.subscribe(t, { qos: 1 })); emit('connect'); });
+    c.on('message', (t, m) => deliver(t, m.toString()));
+    return c;
   });
+  // ntfy.sh: подписка по WebSocket на каждую тему
+  const openWs = t => {
+    if (ws.get(t) && ws.get(t).readyState <= 1) return;
+    let s; try { s = new WebSocket('wss://ntfy.sh/' + ntfyTopic(t) + '/ws'); } catch (e) { return; }
+    ws.set(t, s);
+    s.onmessage = e => { try { const m = JSON.parse(e.data); if (m.event === 'message') deliver(t, m.message); } catch (er) {} };
+    s.onopen = () => emit('connect');
+    s.onclose = () => { if (bus.alive && subs.has(t)) setTimeout(() => openWs(t), 2500); };
+  };
+  // ntfy ограничивает частоту — повтор одного и того же состояния шлём не чаще раза в 8 с
+  const ntfyLast = new Map();
+  const bus = {
+    alive: true,
+    get connected() { return mq.some(c => c.connected) || [...ws.values()].some(s => s.readyState === 1); },
+    status() { return { mqtt: mq.map(c => c.connected), ntfy: [...ws.values()].some(s => s.readyState === 1) }; },
+    on(ev, f) { (handlers[ev] = handlers[ev] || []).push(f); return bus; },
+    subscribe(topics, opts, cb) {
+      [].concat(topics).forEach(t => { subs.add(t); mq.forEach(c => c.connected && c.subscribe(t, { qos: 1 })); openWs(t); });
+      if (typeof cb === 'function') cb();
+    },
+    unsubscribe(t, cb) { let n = 0; const done = () => { if (++n >= mq.length && cb) cb(); }; mq.forEach(c => c.connected ? c.unsubscribe(t, done) : done()); },
+    publish(topic, payload, opts = {}) {
+      let text = payload;
+      if (payload) { try { const o = JSON.parse(payload); o._m = Math.random().toString(36).slice(2, 11); text = JSON.stringify(o); } catch (e) {} }
+      mq.forEach(c => { if (c.connected) c.publish(topic, text, { qos: 1, retain: !!opts.retain }); });
+      if (!payload) return;
+      const key = topic.endsWith('/state') ? payload.replace(/"elapsed":\d+,?/, '') : null;
+      const last = ntfyLast.get(topic);
+      if (key && last && last.key === key && Date.now() - last.t < 8000) return;   // повтор — пропускаем
+      if (key) ntfyLast.set(topic, { key, t: Date.now() });
+      fetch(NTFY + ntfyTopic(topic), { method: 'POST', body: text }).catch(() => {});
+    },
+    reconnect() { mq.forEach(c => { if (!c.connected) try { c.reconnect(); } catch (e) {} }); subs.forEach(openWs); },
+    end() { bus.alive = false; mq.forEach(c => { try { c.end(true); } catch (e) {} }); ws.forEach(s => { try { s.close(); } catch (e) {} }); },
+  };
+  return bus;
 }
-async function connectAny(prefer) {
-  const order = prefer != null ? [prefer] : BROKERS.map((_, i) => i);
-  for (const i of order) { try { return { c: await connect(i), i }; } catch (e) {} }
-  throw new Error('Нет связи с сервером игры. Проверьте интернет.');
+// совместимость со старым кодом: ждём, пока поднимется хоть один канал
+async function connectAny() {
+  const bus = makeBus();
+  const pre = ROOT + '_ping';
+  bus.subscribe(pre);                                  // открывает ntfy-сокет, чтобы проверить и его
+  for (let i = 0; i < 50; i++) { if (bus.connected) break; await new Promise(r => setTimeout(r, 200)); }
+  if (!bus.connected) { bus.end(); throw new Error('Нет связи с сервером игры. Проверьте интернет.'); }
+  return { c: bus, i: 0 };
 }
+// индикатор каналов связи (виден внизу экрана игры)
+setInterval(() => {
+  const n = document.getElementById('net-status'); if (!n) return;
+  if (!client || !client.status) { n.textContent = ''; return; }
+  const s = client.status();
+  n.textContent = 'Связь: ' + s.mqtt.map((ok, i) => (ok ? '●' : '○') + (i + 1)).join(' ') + ' ' + (s.ntfy ? '●' : '○') + 'H';
+  n.className = s.mqtt.some(Boolean) || s.ntfy ? 'ok' : 'bad';
+}, 1500);
 
 // ---------- меню ----------
 let role = null, phase = 'menu';
