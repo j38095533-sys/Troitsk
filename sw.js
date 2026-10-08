@@ -1,5 +1,5 @@
 // Кэш: оболочка сайта сразу, остальное (тайлы, картинки) — по мере просмотра. Работает и при плохой связи.
-const VERSION = 'troitsk-v18';
+const VERSION = 'troitsk-v19';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'lib/maplibre-gl.js', 'lib/maplibre-gl.css',
   'lib/pmtiles.js', 'lib/basemaps.js', 'data/places.json', 'data/eras.json',
   'game.js', 'caravan.js', 'data/caravan.json', 'lib/mqtt.min.js', 'lib/qrcode.js', 'data/quiz.json', 'data/summary.json'];
