@@ -177,6 +177,7 @@ function markSeen(id) {
 
 function openStreet(pl) {
   markSeen(pl.id);
+  if (window.stat) window.stat('place', { id: pl.id });
   const list = (eras[pl.id] || []).slice().sort((a, b) => a.year - b.year);
   const frames = $('frames'); frames.innerHTML = '';
   $('place-title').textContent = pl.title;

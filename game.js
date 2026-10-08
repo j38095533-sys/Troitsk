@@ -136,6 +136,7 @@ function studentJoin(pin) {
       const { c } = await connectAny(+p[0] - 1); client = c;
       me = { id: store.get('tq-id', null) || Math.random().toString(36).slice(2, 10), name: n, pin: p };
       store.set('tq-id', me.id);
+      if (window.stat) window.stat('game', { kind: 'student' });
       client.subscribe(ROOT + p + '/state', { qos: 1 });
       client.on('message', (t, m) => { lastMsgAt = Date.now(); if (!m.length) return; try { onState(JSON.parse(m.toString())); } catch (e) {} });
       lastMsgAt = Date.now(); startWatchdog(p);
@@ -308,6 +309,7 @@ async function hostGame(qs, dur) {
   // перемешиваем варианты, запоминаем правильный
   qs = qs.map(q => { const order = shuffle([0, 1, 2, 3]); return { ...q, options: order.map(k => q.options[k]), a: order.indexOf(q.a) }; });
   H = { pin, qs, dur, players: new Map(), qi: -1, answers: new Map() };
+  if (window.stat) window.stat('game', { kind: 'teacher' });
   client.subscribe([ROOT + pin + '/join', ROOT + pin + '/ans'], { qos: 1 });
   client.on('message', (t, m) => {
     let d; try { d = JSON.parse(m.toString()); } catch (e) { return; }
@@ -419,6 +421,7 @@ async function summaryScreen() {
 let solo = null;
 async function soloStart() {
   role = 'solo'; phase = 'solo';
+  if (window.stat) window.stat('game', { kind: 'solo' });
   const b = await loadBank();
   const qs = shuffle(b).slice(0, 10).map(q => { const o = shuffle([0, 1, 2, 3]); return { ...q, options: o.map(k => q.options[k]), a: o.indexOf(q.a) }; });
   solo = { qs, i: -1, score: 0, streak: 0, right: 0 };

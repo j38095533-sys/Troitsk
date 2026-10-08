@@ -61,7 +61,7 @@
     on = v; btn.classList.toggle('on', on); document.body.classList.toggle('caravan-on', on);
     ['cv-zone', 'cv-zone-line', 'cv-road', 'cv-road-label'].forEach(id => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none'));
     markers.forEach(m => on ? m.addTo(map) : m.remove());
-    if (on) { overview(); map.fitBounds([[61.545, 54.068], [61.575, 54.088]], { padding: pad(), duration: 1500 }); }
+    if (on) { if (window.stat) window.stat('caravan', {}); overview(); map.fitBounds([[61.545, 54.068], [61.575, 54.088]], { padding: pad(), duration: 1500 }); }
     else panel.hidden = true;
   }
 
