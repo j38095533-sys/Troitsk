@@ -315,6 +315,14 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
 }
 
 $('game-btn').addEventListener('click', () => window.openGame && window.openGame());
+// ---- фильмы ----
+$('video-btn').addEventListener('click', () => { $('videos').hidden = false; document.body.classList.add('in-video'); });
+$('vd-close').addEventListener('click', () => {
+  document.querySelectorAll('#videos video').forEach(v => v.pause());
+  $('videos').hidden = true; document.body.classList.remove('in-video');
+});
+document.querySelectorAll('#videos video').forEach(v => v.addEventListener('play', () =>
+  document.querySelectorAll('#videos video').forEach(o => { if (o !== v) o.pause(); })));
 
 // ---- паспорт знатока: пройденные места ----
 function updatePassport() {

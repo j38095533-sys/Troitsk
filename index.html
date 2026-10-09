@@ -10,7 +10,7 @@
 <meta name="tsv-signature" content="TSV-OLEG-2026-aef4bc14a4b0">
 <!-- «Троицк сквозь время» © 2026 Олег Бурылов. Подпись: TSV-OLEG-2026-aef4bc14a4b0 -->
 <link rel="stylesheet" href="lib/maplibre-gl.css">
-<link rel="stylesheet" href="style.css?v=21">
+<link rel="stylesheet" href="style.css?v=22">
 </head>
 <body>
 <div id="map"></div>
@@ -21,6 +21,18 @@
   <div class="top-btns"><button id="pass-btn">🏅 0 из 0</button><button id="caravan-btn">🐫 Караванные пути</button></div>
 </header>
 <button id="game-btn">🎮 Игра</button>
+<button id="video-btn">🎬 Видео</button>
+<section id="videos" hidden>
+  <div class="vd-in">
+    <button class="vd-close" id="vd-close" aria-label="Закрыть">✕</button>
+    <h2>Фильмы о Троицке</h2>
+    <div class="vd-card"><video controls playsinline preload="none" poster="video/troitsk.jpg" src="video/troitsk.mp4"></video>
+      <h3>Троицк. Сквозь время</h3><p>История города от степной крепости до наших дней · 4:15</p></div>
+    <div class="vd-card"><video controls playsinline preload="none" poster="video/people.jpg" src="video/people.mp4"></video>
+      <h3>Люди Троицка</h3><p>Пугачёв, Яушевы, Плевако, Расулев, Гафури, Торайгыров, Башкиров, Кулик, Колчак и Дутов · 4:28</p></div>
+    <p class="vd-note">Реконструкции созданы с помощью ИИ по архивным фото. Портреты — подлинные.</p>
+  </div>
+</section>
 
 <section id="game" hidden>
   <button id="game-close" aria-label="Закрыть игру">✕</button>
@@ -97,12 +109,12 @@
 <script src="lib/maplibre-gl.js"></script>
 <script src="lib/pmtiles.js"></script>
 <script src="lib/basemaps.js"></script>
-<script src="app.js?v=21"></script>
+<script src="app.js?v=22"></script>
 <script src="lib/mqtt.min.js" defer></script>
 <script src="lib/qrcode.js" defer></script>
-<script src="game.js?v=21" defer></script>
-<script src="caravan.js?v=21" defer></script>
-<script src="stats.js?v=21" defer></script>
-<script src="story.js?v=21" defer></script>
+<script src="game.js?v=22" defer></script>
+<script src="caravan.js?v=22" defer></script>
+<script src="stats.js?v=22" defer></script>
+<script src="story.js?v=22" defer></script>
 </body>
 </html>

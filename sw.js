@@ -1,5 +1,5 @@
 // Кэш: оболочка сайта сразу, остальное (тайлы, картинки) — по мере просмотра. Работает и при плохой связи.
-const VERSION = 'troitsk-v22';
+const VERSION = 'troitsk-v23';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'lib/maplibre-gl.js', 'lib/maplibre-gl.css',
   'lib/pmtiles.js', 'lib/basemaps.js', 'data/places.json', 'data/eras.json',
   'game.js', 'caravan.js', 'data/caravan.json', 'lib/mqtt.min.js', 'lib/qrcode.js', 'data/quiz.json', 'data/summary.json'];
@@ -14,6 +14,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  if (/\/video\/.+\.mp4$/.test(new URL(req.url).pathname)) return;     // фильмы — напрямую из сети (большие, идут кусками)
   // .pmtiles читается кусками (Range): держим файл в кэше целиком и сами отдаём нужный кусок
   if (req.headers.has('range')) {
     if (!/\.(pmtiles|mp3)$/.test(new URL(req.url).pathname)) return;

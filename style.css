@@ -382,3 +382,20 @@ body.in-story #game-btn { display: none; }
 .st-ctl.done.st-drag b, .st-ctl.done.st-swipe b { background: #2e7d32; }
 .st-ctl.done.st-drag b::after, .st-ctl.done.st-swipe b::after { content: ""; }
 .st-rubbtn.done { opacity: 0; pointer-events: none; }
+
+/* ---------- видео ---------- */
+#video-btn { position: fixed; top: calc(112px + env(safe-area-inset-top)); right: 12px; z-index: 3; background: #1a1208cc; color: #f3e9dc;
+  border: 1px solid #ffffff33; border-radius: 999px; padding: 9px 16px; font-size: 15px; font-weight: 800; box-shadow: 0 4px 14px #0007; transition: opacity .8s; }
+body.in-street #video-btn, body.in-game #video-btn, body.in-story #video-btn, body.in-video #video-btn { display: none; }
+body.intro #video-btn { opacity: 0; pointer-events: none; }
+#videos { position: fixed; inset: 0; z-index: 22; background: radial-gradient(120% 80% at 50% 0%, #2c2118, var(--bg)); overflow-y: auto; }
+#videos[hidden] { display: none; }
+.vd-in { max-width: 760px; margin: 0 auto; padding: calc(18px + env(safe-area-inset-top)) 16px 32px; position: relative; }
+.vd-in h2 { font-family: Georgia, serif; color: var(--accent); margin: 6px 48px 18px 0; font-size: 26px; }
+.vd-close { position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 16px; width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid #ffffff33; background: #0006; color: #fff; font-size: 18px; }
+.vd-card { background: #00000040; border: 1px solid #ffffff1f; border-radius: 14px; overflow: hidden; margin-bottom: 18px; }
+.vd-card video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; }
+.vd-card h3 { margin: 12px 14px 4px; font-family: Georgia, serif; color: #f3e9dc; font-size: 19px; }
+.vd-card p { margin: 0 14px 14px; color: #cbbfae; font-size: 14px; line-height: 1.4; }
+.vd-note { color: #9d917f; font-size: 13px; }
