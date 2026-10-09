@@ -42,6 +42,15 @@
     else { const i = active; active = -1; if (i >= 0) playScene(i); }
   }
 
+  // картинка с повторами: на телефоне связь дёргается — не сдаёмся с первой ошибки (4 попытки, мимо кэша)
+  function retryImg(im, url, giveUp) {
+    let n = 0;
+    im.onerror = () => {
+      if (++n > 4) return giveUp();
+      setTimeout(() => { im.src = url + (url.includes('?') ? '&' : '?') + 'r=' + n + Date.now() % 1e5; }, 800 * n);
+    };
+    im.src = url;
+  }
   function build() {
     if (built) return; built = true;
     const scroller = el('div', 'st-scroll'); scroller.id = 'st-scroll';
@@ -56,12 +65,12 @@
       const sec = el('section', 'st-scene'); sec.dataset.i = i;
       const stick = el('div', 'st-stick');
       const frame = el('div', 'st-frame');
-      const a = el('img', 'st-img a'); a.alt = ''; a.loading = i < 2 ? 'eager' : 'lazy'; a.src = src(s, 'a');
-      a.onerror = () => { a.replaceWith(Object.assign(el('div', 'st-img a st-ph', `<span>${esc(s.year)}</span>`))); };
+      const a = el('img', 'st-img a'); a.alt = ''; a.loading = i < 2 ? 'eager' : 'lazy';
+      retryImg(a, src(s, 'a'), () => a.replaceWith(el('div', 'st-img a st-ph', `<span>${esc(s.year)}</span>`)));
       frame.append(a);
       if (s.interaction) {
-        const b = el('img', 'st-img b'); b.alt = ''; b.loading = 'lazy'; b.src = src(s, 'b');
-        b.onerror = () => { b.replaceWith(el('div', 'st-img b st-ph st-ph-b', `<span>${esc(s.year)}</span>`)); };
+        const b = el('img', 'st-img b'); b.alt = ''; b.loading = 'lazy';
+        retryImg(b, src(s, 'b'), () => b.replaceWith(el('div', 'st-img b st-ph st-ph-b', `<span>${esc(s.year)}</span>`)));
         frame.append(b);
       }
       stick.append(frame, el('div', 'st-year', esc(s.year)));
