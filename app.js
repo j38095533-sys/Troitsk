@@ -240,6 +240,7 @@ function showEra(list, i) {
   [...$('ticks').children].forEach((n, k) => n.classList.toggle('on', k === i));
   $('year-big').textContent = e.label || e.year;
   $('era-text').textContent = e.text || '';
+  $('era-now').hidden = !(curPlace && curPlace.now); $('era-now').textContent = curPlace && curPlace.now ? '📍 Сейчас: ' + curPlace.now : '';
   const today = e.label === 'Сегодня';
   $('recon').textContent = e.photo ? (today ? 'Кадр собран по современному фото' :
     `Реконструкция по архивному фото (${e.label || e.year}). Камера та же, меняется только время.` + (e.note ? ' ' + e.note : '')) : '';
